@@ -1,61 +1,211 @@
-# Drive Tec · Django + Google Maps
+# 🚨 Drive Tec
 
-Backend Django (PostgreSQL, Gunicorn, WhiteNoise) con el frontend Argon de Drive Tec y mapa de Google.
+**Transcripción, traducción y gestión inteligente de llamadas de emergencia.**
+
+Una llamada multilingüe entra por micrófono (o texto), el sistema la transcribe, detecta el idioma,
+la traduce al español, extrae los datos críticos del incidente (tipo, ubicación, heridos, prioridad),
+genera un reporte auditable y sugiere la unidad de respuesta más cercana — con el **operador al centro
+de la decisión final**.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.12-blue)](https://www.python.org/)
 [![Django](https://img.shields.io/badge/Django-5.2-green)](https://www.djangoproject.com/)
+[![Whisper](https://img.shields.io/badge/ASR-faster--whisper%20local-orange)](https://github.com/SYSTRAN/faster-whisper)
+[![Tests](https://img.shields.io/badge/Tests-23%20autom%C3%A1ticos-success)](#-pruebas)
 
-## 1. Google Cloud
-1. Crea un proyecto y activa facturación (hay capa gratuita mensual, pero **las APIs se cobran por uso**).
-2. Activa: **Maps JavaScript API**, **Geocoding API** y **Routes API**.
-3. Crea **dos** claves:
-   - `GOOGLE_MAPS_KEY` (navegador): restringe por *HTTP referrer* a tu dominio y solo a Maps JavaScript API.
-   - `GOOGLE_SERVER_KEY` (servidor): restringe por IP del servidor y solo a Geocoding + Routes. Nunca llega al cliente.
-4. Define cuotas diarias máximas para evitar cargos inesperados.
+> 🎓 Proyecto académico · Instituto Tecnológico de Tijuana · Lenguajes y Autómatas II
 
-## 2. Despliegue (VPS con Docker)
-```
-cp .env.example .env      # edita los valores
-docker compose up -d --build
-docker compose exec web python manage.py createsuperuser
-```
-Pon un proxy HTTPS delante (Caddy o Nginx) hacia el puerto 8000 y deja `HTTPS=1`.
-Entra en `https://tu-dominio/` (inicia sesión con el usuario creado; los operadores se administran en `/admin/`).
-Verificación: `GET /healthz`. Otras plataformas (Cloud Run, Render, Railway): usa el Dockerfile y define las mismas variables de entorno, con `DATABASE_URL` hacia su PostgreSQL gestionado.
+---
 
-## 3. Desarrollo local
+## 👀 En 30 segundos
+
+```mermaid
+flowchart LR
+    A["🎤 Captura<br>mic · Whisper · texto"] --> B["⚙️ Pipeline de análisis<br>tokens → idioma → traducción → semántica"]
+    B --> C["📄 Reporte<br>DT-2026-XXXX"]
+    B --> D["🚑 Sugerencia<br>de unidad más cercana"]
+    C --> E["🔒 Auditoría<br>FNV-1a + SHA-256 encadenados"]
+    D --> E
 ```
-pip install -r requirements.txt
+
+**Modo «elevador»:** *escucha una llamada en inglés → ve la traducción al español con su nivel de
+confianza → la tabla de símbolos detecta “choque vehicular, 2 heridos, prioridad alta” → el sistema
+sugiere la ambulancia A-12 (la más cercana) → el operador aprueba y despacha → cada paso queda en una
+bitácora verificable con hashes encadenados.*
+
+---
+
+## 🎬 Guion de demostración (2 minutos)
+
+| # | Paso | Qué esperar |
+|---|------|-------------|
+| 1 | Pestaña **Llamada en vivo** → botón de escenario **«Inglés · choque»** | Traducción al español, idioma `EN`, confianza %, motor usado |
+| 2 | Observa el panel derecho | Tabla de símbolos (`tipo_incidente`, `num_personas`, `nivel_triage`…) y **errores señalados, nunca asumidos** |
+| 3 | **Generar reporte automático** | Folio `DT-2026-NNNN`, estado «borrador», entra en el flujo completo con sugerencia de unidad |
+| 4 | **Aprobar → Despachar unidad → Cerrar y liberar** | La unidad cambia a ocupada/libre en el mapa; se mide el tiempo de respuesta |
+| 5 | Pestaña **Unidades** → «Ubicar y calcular ETA» | Ranking por tiempo de llegada (Google Routes o estimación) |
+| 6 | Pestaña **Auditoría** → «Verificar integridad» + «Verificar en servidor» | ✔ Cadena íntegra en cliente (FNV-1a) y servidor (SHA-256) |
+| 7 | Pestaña **Calidad y normas** → «Ejecutar pruebas» | 10 casos automáticos en verde, matriz de requisitos y normas |
+
+**Rutas alternas para impresionar:**
+- 🎙 **Escuchar (navegador)** — dictado real-time (Chrome/Edge).
+- 🎧 **Transcribir (servidor)** — graba y manda el audio a **Whisper local**; funciona en cualquier navegador, offline.
+- 🌐 **Servidor (Google)** — traducción con Cloud Translation API para texto libre fuera del glosario (opcional).
+- Modo **sin internet ni claves**: glosarios deterministas + mapa canvas simulado. Cero costo, cero llamadas externas.
+
+---
+
+## ✨ Funcionalidades
+
+| Módulo | Qué hace |
+|---|---|
+| 🖥️ Centro de mando | KPIs de llamadas activas, unidades libres, respuesta promedio, mapa operativo y gráfica por tipo de incidente |
+| 🎙️ Llamada en vivo | Micrófono (Web Speech), grabación → **Whisper local**, o texto; traducción EN/PT/FR→ES; tabla de símbolos y errores |
+| 📄 Reporte | Folio `DT-2026-NNNN`, edición de campos, flujo borrador → aprobado → despachado → cerrado, exportación a PDF |
+| 🚑 Unidades | Mapa, geocodificación de dirección, ETA por unidad, asignación, liberación y animación de despacho |
+| 🔒 Auditoría | Bitácora con doble cadena de hashes (FNV-1a cliente + SHA-256 servidor), verificable con un clic |
+| ✅ Calidad y normas | 10 pruebas automáticas, matriz de requisitos RF/RNF y alineación ISO/IEEE/CMMI (dinámica, no certificación) |
+
+**Modelado como compilador:** pipeline de 5 etapas
+`audio → tokens acústicos → estructura semántica → texto destino → decisión` — del marco teórico de
+Aho, Lam, Sethi y Ullman aplicado a una llamada real.
+
+---
+
+## 🚀 Inicio rápido
+
+### Windows (recomendado para clase)
+```powershell
+git clone https://github.com/VictorMBojorquez/drivetec.git
+cd drivetec
+python -m pip install -r requirements.txt
+.\crear-admin.bat      # una sola vez: crea el superusuario
+.\start.bat            # abre el navegador y arranca (modo simulado, costo cero)
+```
+
+Con capacidades en servidor, desde PowerShell:
+```powershell
+.\start.ps1 -WhisperModel base                    # transcripción IA local (descarga ~75 MB en el 1.er uso)
+.\start.ps1 -WhisperModel base -GoogleServerKey "AIza…"   # + traducción/geocodificación Google
+```
+
+### Linux / macOS
+```bash
+python -m pip install -r requirements.txt
 DEBUG=1 python manage.py migrate && DEBUG=1 python manage.py createsuperuser
 DEBUG=1 python manage.py runserver
 ```
-En Windows: doble clic en `start.bat` (aplica migraciones, abre el navegador y arranca en modo simulado) o `powershell -File .\start.ps1 -WhisperModel base` para habilitar Whisper/Google; `crear-admin.bat` crea el superusuario. Detener con Ctrl+C en esa ventana.
-**Modo simulado (sin APIs):** si `GOOGLE_MAPS_KEY` está vacía, la app usa automáticamente `core/static/simmap.js`: mapa con estilo Google dibujado en canvas (arrastrar, zoom, calles, río, parques), geocodificación local por gazetteer, ETA estimado y animación de la unidad al despachar. No hace ninguna llamada externa. Al definir la clave, cambia solo a Google Maps.
+Abre `http://127.0.0.1:8000/` e inicia sesión.
 
-## API (requiere sesión)
-| Ruta | Función |
+### Producción (VPS · Docker)
+```bash
+cp .env.example .env            # edita los valores
+docker compose up -d --build
+docker compose exec web python manage.py createsuperuser
+```
+Pon un proxy HTTPS (Caddy/Nginx) hacia el puerto 8000 y `HTTPS=1`. Salud: `GET /healthz` o `/health`.
+
+---
+
+## 🧠 ¿Cómo funciona?
+
+1. **Léxico** — el texto se normaliza y tokeniza.
+2. **Detección de idioma** — marcadores de EN/PT/FR/ES; el glosario traduce con conteo de confianza.
+3. **Traducción** — glosarios deterministas (auditable) o **Cloud Translation API** si hay clave.
+4. **Semántica** — extrae tipo de incidente, heridos, ubicación (gazetteer), condición y prioridad.
+5. **Decisión** — sugiere la unidad más cercana del tipo correcto; **señala datos faltantes en vez de asumirlos**.
+
+### Arquitectura
+
+```
+dt/
+├── drivetec/            # settings, urls, wsgi
+├── core/
+│   ├── models.py        # Unit · Report · AuditEvent
+│   ├── views.py         # estado, geocodificación, ETA, Whisper, traducción, auditoría
+│   ├── admin.py         # /admin/ con bitácora de solo lectura
+│   ├── tests.py         # 23 pruebas de backend
+│   ├── app/index.html   # frontend completo (dashboard + pipeline)
+│   └── static/          # maps.js · simmap.js (mapa canvas simulado)
+├── start.bat / start.ps1 / crear-admin.bat
+├── Dockerfile · docker-compose.yml (con healthchecks)
+└── DriveTec_Documentacion.md   # documento completo del proyecto
+```
+
+---
+
+## 🌐 API (requiere sesión · grupo «Operador» para escrituras)
+
+| Ruta | Método | Función |
+|---|---|---|
+| `/api/state` | GET / PUT | Unidades, reportes, bitácora (persistencia en BD) |
+| `/api/geocode` | POST | Dirección → coordenadas (Google Geocoding) |
+| `/api/rank` | POST | ETA por unidad con tráfico (Google Routes; estimación si falla) |
+| `/api/transcribe` | POST | Audio → texto con **faster-whisper local** (se activa con `WHISPER_MODEL`) |
+| `/api/translate` | POST | Texto → español (Cloud Translation API; sin clave usa el glosario) |
+| `/api/audit/verify` | GET | Verifica la doble cadena de hashes |
+| `/healthz` · `/health` | GET | Comprobación de salud |
+
+Protecciones integradas: sesión + CSRF · roles (staff/grupo *Operador*) · límites de tasa por usuario
+(transcripción 10/min · traducción 30/min · geocodificación 20/min · ETA 60/min · estado 120/min) ·
+validación estricta de entradas (`400`/`403`/`429`, nunca `500`).
+
+---
+
+## ✅ Pruebas
+
+```bash
+python manage.py test      # 23 pruebas de backend: auth, roles, validación, auditoría, ranking
+```
+
+En la app, pestaña **Calidad y normas**: 10 casos PR-01…PR-10 (multilingüe, datos faltantes,
+unidad ocupada, latencia < 50 ms, cadena de auditoría…).
+
+---
+
+## 🔐 Seguridad y privacidad
+
+- Acceso con sesión y CSRF; la API responde `401` sin autenticación y `403` sin rol.
+- La clave de Maps *de navegador* se restringe por HTTP referrer; la *de servidor* nunca llega al cliente.
+- **Whisper local:** el audio se transcribe en tu servidor y no sale de él.
+- Con Google activo, direcciones y texto viajan a sus APIs (aviso operado en la UI).
+- Minimización de datos, folios únicos e integridad verificable por doble cadena de hashes.
+
+---
+
+## 📑 Variables de entorno
+
+| Variable | Uso |
 |---|---|
-| `GET/PUT /api/state` | Unidades, reportes y bitácora (persistencia en BD) |
-| `POST /api/geocode` | Dirección → coordenadas (Google Geocoding) |
-| `POST /api/rank` | ETA por unidad con tráfico (Google Routes); estimación si falla |
-| `GET /api/audit/verify` | Verifica la cadena SHA-256 de auditoría |
-| `POST /api/transcribe` | Audio grabado en el navegador → texto con Whisper local (`faster-whisper`) |
-| `POST /api/translate` | Traducción a español con Cloud Translation API; sin clave usa el glosario del cliente |
+| `SECRET_KEY` | Clave secreta de Django (**obligatoria** sin `DEBUG`) |
+| `DB_PASSWORD` / `DATABASE_URL` | PostgreSQL en despliegue (SQLite por defecto en dev) |
+| `ALLOWED_HOSTS` · `CSRF_TRUSTED_ORIGINS` | Dominios permitidos |
+| `HTTPS` | `1` → cookies seguras, redirección SSL y HSTS |
+| `DEBUG` | `1` solo en desarrollo |
+| `GOOGLE_MAPS_KEY` | Clave de navegador (vacía = mapa simulado) |
+| `GOOGLE_SERVER_KEY` | Clave de servidor para Geocoding, Routes y Translation |
+| `WHISPER_MODEL` | `tiny`, `base`, `small`… (vacío = solo micrófono del navegador) |
+| `WHISPER_DEVICE` · `WHISPER_COMPUTE` | `cpu`/`cuda` · `int8`/`float16` |
 
-Notas de la API:
-- Solo lectura requiere sesión. Las escrituras (`PUT /api/state`, `/api/geocode`, `/api/rank`, `/api/transcribe`, `/api/translate`) exigen el grupo **Operador** o ser staff (el grupo lo crea la migración; asígñalo a usuarios en `/admin/`).
-- Entradas validadas: JSON malformado o con tipos inesperados devuelve `400`; un evento de auditoría que no encadene o con hash de cliente falso se rechaza tras una verificación doble (encadenamiento client-side FNV-1a + SHA-256 server-side, que ahora cubre también `p` y `h`).
-- Límites de tasa por usuario: geocodificación 20/min, ETA 60/min, estado 120/min, traducción 30/min, transcripción 10/min (el excedente devuelve `429`). Protegen la cuota de las APIs de pago de Google y la CPU del servidor.
+---
 
-## Transcripción y traducción en servidor (opcional)
+## 🧭 Limitaciones y siguientes pasos
 
-El reconocimiento por micrófono del navegador (Web Speech API) y el glosario determinista siguen siendo el modo por defecto. Ahora hay dos capacidades adicionales en el backend:
+- Coordenadas y unidades de demostración (edita `SEED` en `core/migrations/0002_seed_and_rehash.py`).
+- Sin GPS en vivo, sin roles granulares (supervisor), sin cifrado en reposo ni pruebas de carga.
+- La traducción por glosarios es determinista; para texto libre usa el motor de Google o conecta un MT propio.
+- Hoja de ruta: transcripción GPS en streaming → roles supervisor/operador → respaldos y cifrado en reposo → pruebas de carga.
 
-- **Transcripción con Whisper (`faster-whisper`, local y offline):** define `WHISPER_MODEL=base` (o `small`; `tiny` para pruebas). El modelo se descarga automáticamente en el primer uso (~40–150 MB según tamaño) y queda en caché. La pestaña «Llamada en vivo» graba con MediaRecorder y sube el audio a `POST /api/transcribe`. Variables: `WHISPER_DEVICE` (`cpu` por defecto, `cuda` si hay GPU) y `WHISPER_COMPUTE` (`int8` por defecto). En VPS con 2 vCPU usa `base`; `small` es más preciso pero más lento.
-- **Traducción automática (Cloud Translation API):** si la clave `GOOGLE_SERVER_KEY` tiene la **Translation API** activada (además de Geocoding y Routes), el botón «🌐 Servidor (Google)» y la casilla «Traducir automáticamente» envían el texto a `POST /api/translate` y la traducción entra al mismo pipeline de extracción/sugerencia. La extracción y la tabla de símbolos se siguen calculando en el cliente sobre el texto traducido, y el operador ve el motor usado. Sin clave, todo se queda local y nada se envía a terceros.
+## 👥 Créditos
 
-Ambas funciones requieren el grupo Operador y están limitadas por tasa. Si Google falla, la vista recuerda el fallo 10 minutos y el cliente vuelve al glosario local sin perder capacidad.
+- **Ballesteros Cruz Aldo Juvetino**
+- **Bojorquez Valdez Victor Manuel**
+- **Grande Ortega Maximiliano Alberto**
 
-## Pendientes antes de producción real
-Coordenadas de unidades y lugares son aproximadas (edita `SEED` en `core/migrations/0002_seed_and_rehash.py`); GPS en vivo de unidades; roles granulares (supervisor vs operador); cifrado de datos en reposo y respaldos; pruebas de carga.
+Instituto Tecnológico de Tijuana · Ingeniería en Sistemas Computacionales · Lenguajes y Autómatas II · 2026
+
+> *Escuchar mejor para responder más rápido.*
+
+## 📄 Licencia
+
+[MIT](LICENSE) — uso libre mencionando al equipo del proyecto.

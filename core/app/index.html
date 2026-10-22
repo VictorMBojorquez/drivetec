@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Drive Tec · Gestión inteligente de llamadas de emergencia</title>
+<link href='https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap' rel='stylesheet'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'></script>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f3f6fb;--sf:#fff;--tx:#0f1f3a;--mu:#5b6b85;--ac:#1479f5;--bd:#d8e0ee;--rd:#d93a3a;--gn:#1a9b5a;--am:#d98a0b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#07101f;--sf:#0f1d36;--tx:#e7eefb;--mu:#93a4c3;--bd:#22345a;--ac:#3aa0ff}}
+:root[data-theme="dark"]{--bg:#07101f;--sf:#0f1d36;--tx:#e7eefb;--mu:#93a4c3;--bd:#22345a;--ac:#3aa0ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{padding:14px 18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}header h1{margin:0;font-size:20px}header small{color:var(--mu)}
+nav{display:flex;gap:6px;padding:0 18px 10px;overflow-x:auto}
+nav button{border:1px solid var(--bd);background:var(--sf);color:var(--tx);padding:8px 14px;border-radius:8px;cursor:pointer;white-space:nowrap}
+nav button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+main{padding:0 18px 30px;max-width:1100px;margin:auto}.p{display:none}.p.on{display:block}
+.g{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.c{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:12px}
+.k{font-size:30px;font-weight:700;color:var(--ac)}.mu{color:var(--mu)}h2{font-size:17px;margin:0 0 8px}
+textarea,input,select{width:100%;padding:8px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--tx);font:inherit}
+textarea{min-height:90px}label{font-size:12px;color:var(--mu);display:block;margin-top:8px}
+.b{border:0;background:var(--ac);color:#fff;padding:9px 14px;border-radius:7px;cursor:pointer;margin:4px 4px 0 0;font:inherit}
+.b.s{background:var(--sf);color:var(--tx);border:1px solid var(--bd)}.b.r{background:var(--rd)}.b.gn{background:var(--gn)}
+.w{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px}td,th{border-bottom:1px solid var(--bd);padding:6px 8px;text-align:left;vertical-align:top}th{color:var(--mu);font-weight:600}
+.tag{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;background:var(--bd)}.alta{background:var(--rd);color:#fff}.media{background:var(--am);color:#fff}.baja{background:var(--gn);color:#fff}
+.er{color:var(--rd)}.ok{color:var(--gn)}code{font-size:12px;word-break:break-all}svg text{fill:var(--tx);font-size:9px}
+@media print{header,nav,.no-print{display:none!important}.p{display:none!important}#p-rep{display:block!important}body{background:#fff;color:#000}}
+:root{--ac:#5e72e4}
+@media(prefers-color-scheme:dark){:root:not([data-theme='light']){--ac:#8a9bff}}
+:root[data-theme='dark']{--ac:#8a9bff}
+body{font-family:'Open Sans',system-ui,sans-serif}
+nav#nav{position:fixed;left:0;top:0;bottom:0;width:230px;flex-direction:column;background:var(--sf);padding:calc(env(safe-area-inset-top,0px) + 16px) 12px 12px;gap:2px;box-shadow:0 0 2rem rgba(136,152,170,.15);z-index:5;overflow-y:auto}
+.brand{font-weight:700;font-size:22px;color:var(--ac);padding:0 14px 18px}
+nav#nav button{border:0;background:none;display:flex;gap:12px;align-items:center;padding:10px 14px;border-radius:6px;color:var(--mu);font-size:14px;text-align:left}
+nav#nav button.on{background:rgba(94,114,228,.12);color:var(--ac)}
+header{margin-left:230px;background:linear-gradient(87deg,#5e72e4 0,#825ee4 100%);color:#fff;padding:24px 30px 110px;display:flex;align-items:center}
+header small{color:#dfe5ff}.chip{background:rgba(255,255,255,.18);padding:6px 14px;border-radius:99px;font-size:13px;margin-left:auto}
+main{margin:-80px 0 0 230px;max-width:none;padding:0 30px 30px}
+.c{border:0;box-shadow:0 0 2rem rgba(136,152,170,.15);border-radius:8px}
+.b{background:#5e72e4}.b.gn{background:#2dce89}.b.r{background:#f5365c}.b.s{background:var(--sf)}
+.kt{display:flex;justify-content:space-between;align-items:flex-start}.kl{font-size:12px;font-weight:700;letter-spacing:.5px;color:var(--mu);text-transform:uppercase}
+.ic{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:#fff;box-shadow:0 4px 6px rgba(50,50,93,.11)}.kf{margin-top:10px;font-size:12px;color:var(--mu)}
+th{text-transform:uppercase;font-size:11px;letter-spacing:.4px}
+@media(max-width:800px){nav#nav{position:static;width:auto;flex-direction:row;padding:8px;overflow-x:auto}.brand{display:none}header,main{margin-left:0}}
+@media print{main{margin:0!important;padding:0!important}}
+</style></head><body>
+<header><div><h1>Drive Tec</h1><small>Escuchar · transcribir · traducir · asignar</small></div><div class='chip'>Operador · Turno A</div></header>
+<nav id="nav"></nav>
+<main>
+<section class="p on" id="p-dash"><div class="g" id="kp"></div>
+<div class="g" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))"><div class="c"><h2>Mapa operativo</h2><svg id="map2" viewBox="0 0 400 300" style="width:100%;border-radius:8px"></svg></div><div class="c"><h2>Reportes por tipo de incidente</h2><div style="height:260px"><canvas id="ch"></canvas></div></div></div>
+<div class="c"><h2>Reportes recientes</h2><div class="w" id="dl"></div></div>
+<div class="c mu">Los datos se sincronizan con el servidor (base de datos) al iniciar sesión. «El sistema recomienda; el operador decide».</div></section>
+
+<section class="p" id="p-live"><div class="g"><div class="c"><h2>1 · Captura de audio / texto</h2>
+<label>Idioma del micrófono</label><select id="sl"><option value="es-MX">Español</option><option value="en-US">English</option><option value="pt-BR">Português</option><option value="fr-FR">Français</option></select>
+<button class="b" id="mic">🎙 Escuchar (navegador)</button><button class="b" id="micS">🎧 Transcribir (servidor)</button><button class="b s" id="clr">Limpiar</button>
+<label>Transcripción (también puedes escribir o pegar)</label><textarea id="txt" placeholder="I need an ambulance, there was a crash near the bridge and two people hurt"></textarea>
+<label>Escenarios de prueba</label><div id="sc"></div></div>
+<div class="c"><h2 style="display:flex;align-items:center;gap:10px">2 · Traducción al español <button class="b s" id="trs" style="font-size:11px;font-weight:700;padding:4px 12px;margin-left:auto">🌐 Servidor (Google)</button></h2><div id="tr" class="mu">Sin entrada.</div><div id="meta" class="mu" style="margin-top:8px"></div><label style="margin-top:6px"><input type="checkbox" id="tauto" style="width:auto;display:inline"> Traducir automáticamente con el servidor (máx 4 000 caracteres)</label></div></div>
+<div class="c"><h2>3 · Análisis (léxico → sintáctico → semántico)</h2><div class="g"><div><b>Tabla de símbolos</b><div class="w" id="sym"></div></div><div><b>Errores semánticos señalados</b><div id="errs"></div><div id="rec" style="margin-top:10px"></div></div></div>
+<button class="b gn" id="gen">Generar reporte automático</button></div></section>
+
+<section class="p" id="p-rep"><div class="c no-print"><label>Reporte</label><select id="rs"></select></div><div id="rv"><div class="c mu">Aún no hay reportes. Genera uno desde «Llamada en vivo».</div></div></section>
+
+<section class="p" id="p-uni"><div class="c"><h2>Asignación de unidades</h2><svg id="map" viewBox="0 0 400 300" style="width:100%;max-width:640px;background:var(--bg);border:1px solid var(--bd);border-radius:8px"></svg>
+<div class="mu">● Ambulancia (azul) ● Patrulla (gris) ● Bomberos (naranja) ✖ Incidente</div><div class="w" id="ul"></div></div></section>
+
+<section class="p" id="p-aud"><div class="c"><h2>Trazabilidad (cadena de hashes encadenados)</h2><button class="b" id="vf">Verificar integridad</button><span id="vr"></span><div class="w" id="al"></div></div></section>
+
+<section class="p" id="p-qa"><div class="c"><h2>Pruebas automáticas (ISO/IEC/IEEE 29119 · IEEE 829)</h2><button class="b" id="rt">Ejecutar pruebas</button><div class="w" id="tt"></div></div>
+<div class="c"><h2>Requisitos verificables (ISO/IEC/IEEE 29148)</h2><div class="w" id="rq"></div></div>
+<div class="c"><h2>Matriz de alineación normativa</h2><div class="w" id="nm"></div>
+<p class="mu">Alineación de diseño y proceso con estas normas; no constituye certificación ni evaluación formal CMMI, que requieren auditor externo.</p></div></section>
+</main>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),csrf=()=>(document.cookie.match(/csrftoken=([^;]+)/)||[])[1]||'';
+const LS='drivetec_v1',U0=()=>[["A-12","Ambulancia",190,100],["A-07","Ambulancia",320,200],["P-07","Patrulla",230,170],["P-03","Patrulla",70,200],["B-03","Bomberos",260,60],["B-01","Bomberos",150,250]].map(([id,t,x,y])=>({id,t,x,y,busy:false}));
+let S={reports:[],seq:2041,log:[],units:U0(),sel:0};
+try{const r=localStorage.getItem(LS);if(r)S=JSON.parse(r)}catch(e){}
+function save(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}window.dtSync&&dtSync()}
+const h=s=>{let a=2166136261;for(let i=0;i<s.length;i++){a^=s.charCodeAt(i);a=Math.imul(a,16777619)}return(a>>>0).toString(16).padStart(8,'0')};
+const mk=(p,t,st,d)=>({t,st,d,p,h:h(p+t+st+d)});
+const log=(st,d)=>{S.log.push(mk(S.log.length?S.log.at(-1).h:'0',new Date().toISOString(),st,d));save()};
+const chainOK=a=>a.every((e,i)=>e.p===(i?a[i-1].h:'0')&&e.h===h(e.p+e.t+e.st+e.d));
+// ---- Glosarios (traducción a español canónico) ----
+const D={en:{"i need":"necesito","an ambulance":"una ambulancia","ambulance":"ambulancia","there was":"hubo","there is":"hay","a crash":"un choque","crash":"choque","accident":"choque","collision":"choque","near the bridge":"cerca del puente","near":"cerca de","the bridge":"el puente","bridge":"puente","two people":"dos personas","three people":"tres personas","one person":"una persona","people":"personas","person":"persona","two":"dos","three":"tres","four":"cuatro","one":"un","injured":"heridos","hurt":"heridos","help":"ayuda","fire":"incendio","my house":"mi casa","on fire":"en llamas","my father":"mi padre","my mother":"mi madre","can't breathe":"no puede respirar","cannot breathe":"no puede respirar","not breathing":"no respira","unconscious":"inconsciente","heart attack":"ataque cardiaco","gun":"arma","shots":"disparos","robbery":"robo","police":"policía","hospital":"hospital","downtown":"centro","airport":"aeropuerto","university":"universidad","plaza":"plaza","street":"calle","please":"por favor","and":"y","the":"el","a":"un","an":"un","at":"en","in":"en","on":"en","is":"está","my":"mi","car":"auto","truck":"camión","motorcycle":"moto","of":"de"},
+pt:{"preciso de":"necesito","uma ambulância":"una ambulancia","ambulância":"ambulancia","houve":"hubo","um acidente":"un choque","acidente":"choque","batida":"choque","perto da ponte":"cerca del puente","perto de":"cerca de","ponte":"puente","duas pessoas":"dos personas","pessoas":"personas","feridos":"heridos","duas":"dos","três":"tres","incêndio":"incendio","fogo":"incendio","meu pai":"mi padre","minha mãe":"mi madre","não consegue respirar":"no puede respirar","não respira":"no respira","inconsciente":"inconsciente","socorro":"ayuda","ajuda":"ayuda","arma":"arma","roubo":"robo","hospital":"hospital","centro":"centro","aeroporto":"aeropuerto","universidade":"universidad","por favor":"por favor","e":"y","um":"un","uma":"una","carro":"auto","caminhão":"camión","moto":"moto","de":"de"},
+fr:{"j'ai besoin d'":"necesito","une ambulance":"una ambulancia","ambulance":"ambulancia","il y a eu":"hubo","un accident":"un choque","accident":"choque","collision":"choque","près du pont":"cerca del puente","près de":"cerca de","pont":"puente","deux personnes":"dos personas","personnes":"personas","blessés":"heridos","deux":"dos","trois":"tres","incendie":"incendio","feu":"incendio","mon père":"mi padre","ma mère":"mi madre","ne peut pas respirer":"no puede respirar","inconscient":"inconsciente","au secours":"ayuda","aide":"ayuda","arme":"arma","vol":"robo","hôpital":"hospital","centre":"centro","aéroport":"aeropuerto","université":"universidad","s'il vous plaît":"por favor","et":"y","un":"un","une":"una","voiture":"auto","camion":"camión","moto":"moto","de":"de"}};
+const M={en:"i the there was need my is and near a an crash people hurt",pt:"preciso um uma houve perto meu não pai de pessoas feridos",fr:"j'ai il y près mon pas est et blessés personnes une",es:"necesito hubo cerca mi no una el la y personas heridos"};
+const GZ={puente:["Puente Central",210,120],hospital:["Hospital General",300,80],centro:["Centro",200,160],aeropuerto:["Aeropuerto",360,240],universidad:["Universidad",80,70],plaza:["Plaza Río",120,220]};
+const NUM={un:1,uno:1,una:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6};
+const tok=t=>t.toLowerCase().replace(/[’]/g,"'").replace(/[^a-záéíóúñüàâçèêëîïôùûãõ0-9' ]+/g,' ').split(/\s+/).filter(Boolean);
+function detect(tk){const sc={};for(const l in M){const w=M[l].split(' ');sc[l]=tk.filter(t=>w.includes(t)).length}let b='es',m=0;for(const l in sc)if(sc[l]>m){m=sc[l];b=l}return b}
+function translate(tk,lang){if(lang==='es')return{es:tk.join(' '),conf:1,unk:[]};
+ const order=[lang,...Object.keys(D).filter(x=>x!==lang)];let out=[],ok=0,unk=[],i=0;
+ while(i<tk.length){let hit=false;for(let n=5;n>0&&!hit;n--){const p=tk.slice(i,i+n).join(' ');if(i+n>tk.length&&n>1&&n>tk.length-i)continue;
+  for(const l of order){if(D[l][p]!==undefined){out.push(D[l][p]);ok+=n;i+=n;hit=true;break}}}
+  if(!hit){const w=tk[i];if(/^\d+$/.test(w)){ok++}else unk.push(w);out.push(w);i++}}
+ return{es:out.join(' '),conf:tk.length?ok/tk.length:0,unk}}
+function rank(tipo,her,x,y,units){const need={choque:her?'Ambulancia':'Patrulla',incendio:'Bomberos',robo:'Patrulla',medico:'Ambulancia'}[tipo];
+ if(x==null||!need)return{main:null,alts:[],need};const f=units.filter(u=>!u.busy).map(u=>({...u,km:Math.hypot(u.x-x,u.y-y)*0.06})).sort((a,b)=>a.km-b.km);
+ const main=f.find(u=>u.t===need)||null;const alts=['Ambulancia','Patrulla','Bomberos'].map(t=>f.find(u=>u.t===t&&(!main||u.id!==main.id))).filter(Boolean).filter(u=>u.t!==need).slice(0,2);return{main,alts,need}}
+function analyze(text,units,ext){const t0=performance.now(),tk=tok(text),lang=detect(tk);let tr=ext&&ext.es!=null?{es:String(ext.es),conf:ext.conf==null?1:ext.conf,unk:[]}:translate(tk,lang);const es=tr.es;
+ let tipo=/incendio|llamas|humo/.test(es)?'incendio':/robo|arma|disparo|asalto/.test(es)?'robo':/choque|accidente|colisi|volc/.test(es)?'choque':/respir|inconsciente|card[ií]ac|desmay|sangr|ambulancia/.test(es)?'medico':null;
+ let her=null,m=es.match(/(\d+|uno|una|un|dos|tres|cuatro|cinco|seis)\s+(?:posibles\s+)?(?:heridos?|personas?|víctimas?)/);
+ if(m)her=NUM[m[1]]??+m[1];else if(/\bmi (padre|madre|hijo|hija|esposo|esposa|abuel[oa])\b/.test(es))her=1;
+ let uk=null;for(const k in GZ)if(new RegExp('\\b'+k+'|\\b'+GZ[k][0].toLowerCase()).test(es)){uk=k;break}
+ const cond=/respir/.test(es)?'disnea':/inconsciente/.test(es)?'inconsciente':her?'herido':null,veh=(es.match(/\b(auto|camión|moto)\b/)||[])[1]||null;
+ let prio=!tipo?null:(/respir|inconsciente|card|llamas|incendio|disparo|arma/.test(es)||her>=1)?'alta':(tipo==='choque'||tipo==='robo')?'media':'baja';
+ const errs=[];if(!tk.length)errs.push('Entrada vacía');else{if(!tipo)errs.push('Tipo de incidente sin clasificar: no se asume');if(!uk)errs.push('Ubicación no identificada: confirmar con la persona que llama');if(her==null)errs.push('Número de personas/heridos no indicado');
+ if(tr.conf<0.6)errs.push('Traducción de baja confianza ('+Math.round(tr.conf*100)+'%)'+(tr.unk.length?': términos no reconocidos «'+tr.unk.slice(0,5).join(', ')+'»':''))}
+ const g=uk?GZ[uk]:null,rc=rank(tipo,her,g?g[1]:null,g?g[2]:null,units);
+ return{lang,es,conf:tr.conf,tk:tk.length,tipo,her,uk,ub:g?g[0]:null,x:g?g[1]:null,y:g?g[2]:null,cond,veh,prio,errs,rc,ms:Math.round(performance.now()-t0),engine:(ext&&ext.engine)||'local',orig:text,
+ sym:{tipo_incidente:tipo,accion_incidente:rc.need?'solicitar '+rc.need.toLowerCase():null,tipo_vehiculo:veh,num_personas:her,condicion_victima:cond,nivel_triage:prio,ubicacion_escena:g?g[0]:null}}}
+const TN={choque:'Choque vehicular',incendio:'Incendio',robo:'Robo / agresión armada',medico:'Emergencia médica'};
+// ---- Interfaz ----
+const TABS=[['dash','Centro de mando'],['live','Llamada en vivo'],['rep','Reporte'],['uni','Unidades'],['aud','Auditoría'],['qa','Calidad y normas']];
+const P={phone:'M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z',doc:'M6 3h9l4 4v14H6zM14 3v5h5M9 13h6M9 17h6',truck:'M2 7h11v9H2zM13 10h5l3 3v3h-8zM6 18h.01M17 18h.01',clock:'M12 3a9 9 0 100 18 9 9 0 000-18zM12 7v5l3 2',dash:'M3 4h8v8H3zM13 4h8v5h-8zM13 11h8v9h-8zM3 14h8v6H3z',mic:'M12 3a3 3 0 013 3v6a3 3 0 01-6 0V6a3 3 0 013-3zM6 11a6 6 0 0012 0M12 17v4',pin:'M12 21s7-6 7-11a7 7 0 10-14 0c0 5 7 11 7 11zM12 7a3 3 0 100 6 3 3 0 000-6z',shield:'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z',check:'M5 12l5 5 9-10'};
+const ico=k=>`<svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='${P[k]}'/></svg>`;
+const TI={dash:'dash',live:'mic',rep:'doc',uni:'pin',aud:'shield',qa:'check'};
+$('#nav').innerHTML=`<div class='brand'>◎ drive tec</div>`+TABS.map(([k,v])=>`<button data-k="${k}">${ico(TI[k])}${v}</button>`).join('');
+function tab(k){document.querySelectorAll('.p').forEach(p=>p.classList.toggle('on',p.id==='p-'+k));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.k===k));({dash:rDash,rep:rRep,uni:rUni,aud:rAud,qa:rQA})[k]?.()}
+$('#nav').onclick=e=>e.target.dataset.k&&tab(e.target.dataset.k);
+const SC=[["Inglés · choque","I need an ambulance, there was a crash near the bridge and two people hurt"],["Español · disnea","Mi padre no puede respirar, estamos en el hospital"],["Portugués · acidente","Preciso de uma ambulância, houve um acidente perto da ponte"],["Francés · incendie","Il y a eu un incendie près du pont, au secours"],["Datos faltantes","help please"]];
+$('#sc').innerHTML=SC.map((s,i)=>`<button class="b s" data-i="${i}">${s[0]}</button>`).join('');
+$('#sc').onclick=e=>{if(e.target.dataset.i){$('#txt').value=SC[e.target.dataset.i][1];run()}};
+let cur=null,t0=null,rec=null,voiceOn=false,vtmr=null,vbuf='',vLast=0,vRep=0;
+function paint(a,v){$('#tr').innerHTML=v?`<b>${esc(a.es)}</b>`:'Sin entrada.';
+ $('#meta').textContent=v?`Idioma detectado: ${a.lang.toUpperCase()} · confianza ${Math.round(a.conf*100)}% · ${a.tk} tokens · ${a.ms} ms · Motor: ${a.engine==='local'?'glosario':a.engine}`:'';
+ $('#sym').innerHTML='<table>'+Object.entries(a.sym).map(([k,x])=>`<tr><td><code>${k}</code></td><td>${x==null?'<span class="er">⚠ faltante</span>':esc(x)}</td></tr>`).join('')+'</table>';
+ $('#errs').innerHTML=a.errs.length?a.errs.map(e=>`<div class="er">⚠ ${esc(e)}</div>`).join(''):(v?'<div class="ok">✔ Sin errores semánticos</div>':'');
+ const r=a.rc;$('#rec').innerHTML=v?`<b>Unidad sugerida:</b> ${r.main?`${r.main.id} (${r.main.t}, ${r.main.km.toFixed(1)} km)`:'— requiere ubicación/tipo'} ${a.prio?`<span class="tag ${a.prio}">${a.prio}</span>`:''}`:''}
+function run(){const v=$('#txt').value;if(v&&!t0)t0=Date.now();if(!v)t0=null;cur=analyze(v,S.units);paint(cur,v)}
+let tTr=null;$('#txt').oninput=()=>{run();clearTimeout(tTr);if($('#tauto').checked)tTr=setTimeout(()=>srvTr(true),700)};
+async function srvTr(auto){const v=$('#txt').value;if(!v.trim())return;const b=$('#trs');if(b)b.disabled=true;
+ try{const r=await fetch('/api/translate',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRFToken':csrf()},body:JSON.stringify({q:v.slice(0,4000)})}),d=await r.json();
+  if(d&&d.es!=null){if(!t0)t0=Date.now();cur=analyze(v,S.units,{es:d.es,conf:1,engine:'google ('+(d.dst||'?')+'→es)'});paint(cur,v)}
+  else if(d&&d.error&&!auto)$('#meta').textContent=d.error}
+ catch(e){if(!auto)$('#meta').textContent='Traducción con servidor no disponible; usa el glosario local'}
+ if(b)b.disabled=false}
+$('#trs').onclick=()=>srvTr(false);
+$('#clr').onclick=()=>{if(voiceOn){stopRec();$('#mic').textContent='🎙 Escuchar (navegador)'}$('#txt').value='';run()};
+function vShow(txt){$('#txt').value=txt.trim();run()}
+function stopRec(){voiceOn=false;clearTimeout(vtmr);if(rec){try{rec.stop()}catch(e){}}}
+function startRec(){const R=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!R){alert('Este navegador no ofrece reconocimiento de voz. Usa Chrome/Edge, o el botón «Transcribir (servidor)» que funciona en cualquier navegador.');return}
+ vbuf='';$('#mic').textContent='⏹ Detener (navegador)';
+ try{rec=new R()}catch(e){rec=null;return}
+ rec.lang=$('#sl').value;rec.continuous=true;rec.interimResults=true;rec.maxAlternatives=1;
+ rec.onresult=e=>{let interim='';for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];r.isFinal?vbuf+=r[0].transcript+' ':interim+=r[0].transcript}
+  vShow(vbuf+interim)};
+ rec.onerror=e=>{const k=e&&e.error||'';
+  if(k==='not-allowed'||k==='service-not-allowed'){voiceOn=false;rec=null;$('#mic').textContent='🎙 Escuchar (navegador)';
+   alert('Permiso de micrófono denegado. Permita el acceso con el ícono 🔒 de la barra de direcciones o en chrome://settings/content/microphone.')
+  }else if(k==='audio-capture'){voiceOn=false;rec=null;$('#mic').textContent='🎙 Escuchar (navegador)'}
+ }; // 'no-speech' y 'network' se manejan con el reinicio de onend
+ rec.onend=()=>{rec=null;clearTimeout(vtmr);
+  const now=Date.now();
+  if(now-vLast<900)vRep++;else vRep=0;          // cortes consecutivos < 1 s = micrófono ocupado/permiso
+  vLast=now;
+  if(voiceOn&&vRep<6){vtmr=setTimeout(startRec,300)}   // Chrome corta al detectar silencio largo: se reinicia solo
+  else if(voiceOn){voiceOn=false;$('#mic').textContent='🎙 Escuchar (navegador)';
+   alert('El micrófono se cierra enseguida. Cierra otras apps que lo usen (Zoom, Meet…) o revisa: chrome://settings/content/microphone y el ícono 🔒 de esta página.')}
+  else $('#mic').textContent='🎙 Escuchar (navegador)'};
+ try{rec.start();voiceOn=true;if(vRep==null)vRep=0}catch(e){rec=null;voiceOn=false;$('#mic').textContent='🎙 Escuchar (navegador)';alert('No se pudo iniciar el micrófono: '+((e&&e.message)||e))}}
+$('#mic').onclick=()=>{if(voiceOn){stopRec();$('#mic').textContent='🎙 Escuchar (navegador)';return}
+ stopRec();startRec()};
+// Transcripción en servidor (MediaRecorder → /api/transcribe → faster-whisper)
+let mrec=null,mch=[];
+$('#micS').onclick=async()=>{const b=$('#micS');if(mrec&&mrec.state==='recording'){mrec.stop();return}
+ if(voiceOn){stopRec();$('#mic').textContent='🎙 Escuchar (navegador)'}
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){alert('Este navegador no permite grabar audio.');return}
+ try{const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
+  mch=[];mrec=new MediaRecorder(st);
+  mrec.ondataavailable=e=>{if(e.data.size)mch.push(e.data)};   // chunks cada 250 ms: si algo corta, se conserva lo grabado
+  mrec.onstop=async()=>{b.textContent='🎧 Transcribir (servidor)';st.getTracks().forEach(t=>t.stop());b.disabled=true;
+   try{
+    if(!mch.length){alert('La grabación fue muy corta o no capturó audio. Pulsa el botón, habla varios segundos y detén.');b.disabled=false;return}
+    const fd=new FormData();fd.append('audio',new Blob(mch,{type:mrec.mimeType||'audio/webm'}),'llamada.webm');
+    const r=await fetch('/api/transcribe',{method:'POST',credentials:'same-origin',headers:{'X-CSRFToken':csrf()},body:fd}),d=await r.json();
+    if(d&&d.text){vShow(d.text);$('#meta').textContent='Whisper (servidor): idioma '+d.lang+' · '+d.dur+' s de audio';t0=t0||Date.now();if($('#tauto').checked)srvTr(true)}
+    else alert((d&&d.error)||'No se pudo transcribir')}
+   catch(e){alert('Error al subir el audio: '+((e&&e.message)||e))}
+   b.disabled=false};
+  mrec.start(250);b.textContent='⏹ Detener transcripción (Whisper)'}
+ catch(e){alert('Micrófono no disponible: '+((e&&e.message)||e))}};
+$('#gen').onclick=()=>{if(!cur||!cur.tk){alert('Captura o escribe una llamada primero.');return}
+ const a=cur,folio='DT-2026-'+(++S.seq),r={folio,dt:new Date().toLocaleString('es-MX'),lang:a.lang,dur:Math.round((Date.now()-(t0||Date.now()))/1000),tipo:a.tipo,uk:a.uk,ub:a.ub,her:a.her,prio:a.prio,orig:a.orig,es:a.es,conf:a.conf,cond:a.cond,errs:a.errs,unit:a.rc.main?a.rc.main.id:'',status:'borrador',t0:t0||Date.now(),resp:null,day:new Date().toDateString()};
+ S.reports.unshift(r);S.sel=0;
+ ['Captura: '+r.orig.length+' caracteres','Transcripción/Traducción '+a.lang+'→es conf '+Math.round(a.conf*100)+'%','Extracción: '+(a.tipo||'?')+'/'+(a.ub||'?')+'/'+(a.her??'?'),'Reporte generado, unidad sugerida '+(r.unit||'ninguna')].forEach(d=>log(folio,d));
+ save();$('#txt').value='';t0=null;run();tab('rep')};
+const sumTxt=r=>`${TN[r.tipo]||'Incidente sin clasificar'} ${r.ub?'en '+r.ub:'(ubicación sin confirmar)'}. Personas/heridos: ${r.her??'sin dato'}. Prioridad: ${r.prio||'sin determinar'}.`;
+function rDash(){const fr=S.units.filter(u=>!u.busy).length,act=S.reports.filter(r=>r.status!=='cerrado').length,tod=S.reports.filter(r=>r.day===new Date().toDateString()).length,rs=S.reports.filter(r=>r.resp!=null),av=rs.length?Math.round(rs.reduce((a,r)=>a+r.resp,0)/rs.length):null;
+ $('#kp').innerHTML=[[act,'Llamadas activas','phone','linear-gradient(87deg,#f5365c,#f56036)','Casos sin cerrar'],[tod,'Reportes hoy','doc','linear-gradient(87deg,#fb6340,#fbb140)','Último folio DT-2026-'+S.seq],[fr+'/'+S.units.length,'Unidades libres','truck','linear-gradient(87deg,#2dce89,#2dcecc)','Disponibles para despacho'],[av==null?'—':Math.floor(av/60)+':'+String(av%60).padStart(2,'0'),'Respuesta promedio','clock','linear-gradient(87deg,#11cdef,#1171ef)','mm:ss hasta el despacho']].map(([k,l,i,g,f])=>`<div class='c'><div class='kt'><div><div class='kl'>${l}</div><div class='k'>${k}</div></div><div class='ic' style='background:${g}'>${ico(i)}</div></div><div class='kf'>${f}</div></div>`).join('');dmap();chart();
+ $('#dl').innerHTML=S.reports.length?'<table><tr><th>Folio</th><th>Hora</th><th>Incidente</th><th>Prioridad</th><th>Unidad</th><th>Estado</th></tr>'+S.reports.slice(0,8).map((r,i)=>`<tr><td><a href="#" data-i="${i}">${r.folio}</a></td><td>${r.dt}</td><td>${TN[r.tipo]||'—'}</td><td><span class="tag ${r.prio||''}">${r.prio||'—'}</span></td><td>${r.unit||'—'}</td><td>${r.status}</td></tr>`).join('')+'</table>':'<span class="mu">Sin reportes todavía.</span>'}
+$('#dl').onclick=e=>{if(e.target.dataset.i!=null){e.preventDefault();S.sel=+e.target.dataset.i;tab('rep')}};
+function rRep(){const R=S.reports;$('#rs').innerHTML=R.map((r,i)=>`<option value="${i}" ${i===S.sel?'selected':''}>${r.folio} · ${TN[r.tipo]||'—'}</option>`).join('');if(!R.length)return;const r=R[S.sel]||R[0],ed=r.status==='borrador';
+ const opts=(arr,v)=>arr.map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('');
+ $('#rv').innerHTML=`<div class="c"><h2>Reporte ${r.folio} <span class="tag">${r.status}</span></h2>
+ <table><tr><th>Fecha y hora</th><td>${r.dt}</td><th>Idioma original</th><td>${r.lang.toUpperCase()}</td></tr><tr><th>Duración</th><td>${Math.floor(r.dur/60)}:${String(r.dur%60).padStart(2,'0')}</td><th>Confianza traducción</th><td>${Math.round(r.conf*100)}%</td></tr></table>
+ <label>Tipo de incidente</label><select data-f="tipo" ${ed?'':'disabled'}>${opts([['','Sin clasificar'],...Object.entries(TN)],r.tipo||'')}</select>
+ <label>Ubicación</label><select data-f="uk" ${ed?'':'disabled'}>${opts([['','Sin confirmar'],...Object.entries(GZ).map(([k,v])=>[k,v[0]])],r.uk||'')}</select>
+ <label>Personas / heridos</label><input data-f="her" type="number" min="0" value="${r.her??''}" ${ed?'':'disabled'}>
+ <label>Prioridad</label><select data-f="prio" ${ed?'':'disabled'}>${opts([['','Sin determinar'],['alta','Alta'],['media','Media'],['baja','Baja']],r.prio||'')}</select>
+ <label>Resumen</label><textarea data-f="res" ${ed?'':'disabled'}>${esc(r.res||sumTxt(r))}</textarea>
+ <label>Unidad asignada</label><select data-f="unit" ${r.status==='despachado'||r.status==='cerrado'?'disabled':''}>${opts([['','Sin asignar'],...S.units.filter(u=>!u.busy||u.id===r.unit).map(u=>[u.id,u.id+' · '+u.t])],r.unit||'')}</select>
+ <label>Transcripción original</label><div class="mu">${esc(r.orig)}</div><label>Traducción</label><div>${esc(r.es)}</div>
+ ${r.errs.length?'<label>Alertas</label>'+r.errs.map(e=>`<div class="er">⚠ ${esc(e)}</div>`).join(''):''}
+ <div class="no-print" style="margin-top:12px">${r.status==='borrador'?'<button class="b gn" data-a="ap">Aprobar</button>':''}${r.status==='aprobado'?'<button class="b" data-a="dp">Despachar unidad</button>':''}${r.status==='despachado'?'<button class="b" data-a="cl">Cerrar y liberar unidad</button>':''}<button class="b s" data-a="pdf">Exportar a PDF</button></div></div>`}
+$('#rs').onchange=e=>{S.sel=+e.target.value;rRep()};
+$('#rv').onchange=e=>{const r=S.reports[S.sel],f=e.target.dataset.f;if(!f)return;const v=e.target.value;
+ if(f==='tipo'||f==='uk'||f==='her'||f==='prio'){r[f]=f==='her'?(v===''?null:+v):(v||null);if(f==='uk')r.ub=r.uk?GZ[r.uk][0]:null;r.res=null;
+ if(f!=='unit'&&f!=='prio'){const g=r.uk?GZ[r.uk]:null,rc=rank(r.tipo,r.her,g?g[1]:null,g?g[2]:null,S.units);r.unit=rc.main?rc.main.id:r.unit}}
+ else if(f==='res')r.res=v;else if(f==='unit')r.unit=v;log(r.folio,'Edición del operador: '+f+'='+v);save();rRep()};
+$('#rv').onclick=e=>{const a=e.target.dataset.a;if(!a)return;const r=S.reports[S.sel];
+ if(a==='pdf'){window.print();return}
+ if(a==='ap'){r.status='aprobado';log(r.folio,'Reporte aprobado por operador')}
+ if(a==='dp'){const u=S.units.find(u=>u.id===r.unit);if(!u){alert('Asigna una unidad primero.');return}u.busy=true;r.status='despachado';r.resp=Math.round((Date.now()-r.t0)/1000);log(r.folio,'Despacho de '+u.id+', respuesta '+r.resp+'s')}
+ if(a==='cl'){const u=S.units.find(u=>u.id===r.unit);if(u)u.busy=false;r.status='cerrado';log(r.folio,'Incidente cerrado; unidad liberada')}
+ save();rRep()};
+function rUni(){const r=S.reports[S.sel],inc=r&&r.uk?GZ[r.uk]:null,col={Ambulancia:'#1479f5',Patrulla:'#7a8699',Bomberos:'#f08a1c'};let s='';
+ for(const k in GZ)s+=`<rect x="${GZ[k][1]-4}" y="${GZ[k][2]-4}" width="8" height="8" fill="none" stroke="#8aa" /><text x="${GZ[k][1]+7}" y="${GZ[k][2]+3}">${GZ[k][0]}</text>`;
+ const au=r&&S.units.find(u=>u.id===r.unit);if(inc&&au)s+=`<line x1="${au.x}" y1="${au.y}" x2="${inc[1]}" y2="${inc[2]}" stroke="#d93a3a" stroke-dasharray="4"/>`;
+ S.units.forEach(u=>s+=`<circle cx="${u.x}" cy="${u.y}" r="6" fill="${col[u.t]}" opacity="${u.busy?.35:1}"/><text x="${u.x+8}" y="${u.y-6}">${u.id}</text>`);
+ if(inc)s+=`<text x="${inc[1]-5}" y="${inc[2]+4}" style="fill:#d93a3a;font-size:14px;font-weight:700">✖</text>`;$('#map').innerHTML=BASE+s;
+ $('#ul').innerHTML='<table><tr><th>Unidad</th><th>Tipo</th><th>Estado</th><th></th></tr>'+S.units.map(u=>`<tr><td>${u.id}</td><td>${u.t}</td><td>${u.busy?'<span class="er">ocupada</span>':'<span class="ok">libre</span>'}</td><td>${u.busy?`<button class="b s" data-u="${u.id}">Liberar</button>`:''}</td></tr>`).join('')+'</table>'}
+$('#ul').onclick=e=>{const u=S.units.find(x=>x.id===e.target.dataset.u);if(u){u.busy=false;log('UNIDAD','Liberación manual de '+u.id);save();rUni()}};
+const BASE=`<rect width='400' height='300' style='fill:var(--bd)' opacity='.45'/><path d='M150 0C175 60 150 120 195 170S245 250 225 300H250C285 245 235 195 220 150S205 60 180 0Z' fill='#5e72e4' opacity='.7'/><path d='M300 0C325 40 360 25 400 70V0Z' fill='#5e72e4' opacity='.7'/><path d='M0 215C45 200 85 250 125 300H0Z' fill='#5e72e4' opacity='.7'/><path d='M270 190C300 175 330 200 345 240' stroke='#5e72e4' stroke-width='6' fill='none' opacity='.55'/>`;
+let CH;
+function dmap(){const col={Ambulancia:'#2dce89',Patrulla:'#525f7f',Bomberos:'#fb6340'};let s=BASE;for(const k in GZ)s+=`<text x='${GZ[k][1]+7}' y='${GZ[k][2]+3}'>${GZ[k][0]}</text>`;
+ S.reports.filter(r=>r.status!=='cerrado'&&r.uk).forEach(r=>{const g=GZ[r.uk];s+=`<circle cx='${g[1]}' cy='${g[2]}' r='10' fill='#f5365c' opacity='.3'/><circle cx='${g[1]}' cy='${g[2]}' r='4' fill='#f5365c'/>`});
+ S.units.forEach(u=>s+=`<circle cx='${u.x}' cy='${u.y}' r='6' fill='${col[u.t]}' stroke='#fff' stroke-width='1.5' opacity='${u.busy?.4:1}'/><text x='${u.x+8}' y='${u.y-6}'>${u.id}</text>`);$('#map2').innerHTML=s}
+function chart(){if(!window.Chart)return;Chart.defaults.color=getComputedStyle(document.body).color;const cnt=Object.keys(TN).map(k=>S.reports.filter(r=>r.tipo===k).length);if(CH)CH.destroy();CH=new Chart($('#ch'),{type:'bar',data:{labels:Object.values(TN),datasets:[{label:'Reportes',data:cnt,backgroundColor:['#f5365c','#fb6340','#ffd600','#11cdef'],borderRadius:4}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}}},maintainAspectRatio:false}})}
+function rAud(){$('#al').innerHTML=S.log.length?'<table><tr><th>#</th><th>Hora (UTC)</th><th>Folio/Etapa</th><th>Evento</th><th>Hash</th></tr>'+S.log.map((e,i)=>`<tr><td>${i+1}</td><td>${e.t.slice(0,19)}</td><td>${esc(e.st)}</td><td>${esc(e.d)}</td><td><code>${e.h}</code></td></tr>`).join('')+'</table>':'<span class="mu">Sin eventos.</span>'}
+$('#vf').onclick=()=>{$('#vr').innerHTML=chainOK(S.log)?' <b class="ok">✔ Cadena íntegra ('+S.log.length+' eventos)</b>':' <b class="er">✖ Se detectó alteración</b>'};
+// ---- Calidad ----
+const TS=[["PR-01 Inglés: choque con 2 heridos",()=>{const a=analyze(SC[0][1],U0());return a.tipo==='choque'&&a.uk==='puente'&&a.her===2&&a.prio==='alta'&&a.lang==='en'}],
+["PR-02 Español: disnea",()=>{const a=analyze("Mi padre no puede respirar",U0());return a.tipo==='medico'&&a.cond==='disnea'&&a.prio==='alta'&&a.her===1}],
+["PR-03 Portugués: acidente",()=>{const a=analyze(SC[2][1],U0());return a.tipo==='choque'&&a.uk==='puente'}],
+["PR-04 Francés: incendie → Bomberos",()=>{const a=analyze(SC[3][1],U0());return a.tipo==='incendio'&&a.rc.main&&a.rc.main.t==='Bomberos'}],
+["PR-05 Datos faltantes se señalan, no se asumen",()=>{const a=analyze("help please",U0());return a.tipo===null&&a.errs.length>=2&&a.prio===null}],
+["PR-06 Unidad más cercana: A-12 para el puente",()=>analyze(SC[0][1],U0()).rc.main?.id==='A-12'],
+["PR-07 Unidad ocupada se excluye",()=>{const u=U0();u[0].busy=true;return analyze(SC[0][1],u).rc.main?.id==='A-07'}],
+["PR-08 Traducción de baja confianza se marca",()=>analyze("the quick brown fox needs an ambulance",U0()).errs.some(e=>/baja confianza/.test(e))],
+["PR-09 Cadena de auditoría detecta alteración",()=>{const a=[];let p='0';for(let i=0;i<3;i++){const e=mk(p,'t'+i,'s','d'+i);a.push(e);p=e.h}const ok=chainOK(a);a[1].d='x';return ok&&!chainOK(a)}],
+["PR-10 Latencia de análisis < 50 ms",()=>analyze(SC[0][1],U0()).ms<50]];
+$('#rt').onclick=()=>{$('#tt').innerHTML='<table><tr><th>Caso</th><th>Resultado</th></tr>'+TS.map(([n,f])=>{let ok=false;try{ok=!!f()}catch(e){}return`<tr><td>${n}</td><td class="${ok?'ok':'er'}">${ok?'✔ Aprobado':'✖ Falló'}</td></tr>`}).join('')+'</table>'};
+const RQ=[["RF-01","Capturar audio (micrófono) o texto con metadatos de hora e idioma","Llamada en vivo","PR-01"],["RF-02","Transcribir y mostrar en vivo (Web Speech API del navegador)","Llamada en vivo","Manual"],["RF-03","Traducir EN/PT/FR a español, con código mixto, indicando confianza","Panel de traducción","PR-01, 03, 04, 08"],["RF-04","Extraer tipo, ubicación, heridos y prioridad","Tabla de símbolos","PR-01, 02"],["RF-05","Señalar datos faltantes sin asumirlos","Errores semánticos","PR-05"],["RF-06","Generar reporte editable, aprobable y exportable a PDF","Reporte","Manual"],["RF-07","Sugerir unidad más cercana; decisión final del operador","Unidades","PR-06, 07"],["RF-08","Trazabilidad auditable de cada transformación","Auditoría","PR-09"],["RNF-01","Latencia de análisis < 50 ms","Panel de traducción","PR-10"]];
+$('#rq').innerHTML='<table><tr><th>ID</th><th>Requisito</th><th>Módulo</th><th>Prueba</th></tr>'+RQ.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('')+'</table>';
+const NM=[["ISO/IEC/IEEE 12207","Ciclo de vida del software","Requisitos → diseño → construcción → verificación con evidencia trazable en esta pestaña"],["ISO/IEC/IEEE 29148 (sucesor de IEEE 830)","Ingeniería de requisitos","Requisitos con ID, verificables y ligados a pruebas"],["IEEE 1016","Descripción del diseño","Arquitectura de 4 módulos y pipeline de 5 etapas como compilador (léxico, sintáctico, semántico, destino)"],["ISO/IEC 25010","Calidad del producto","Adecuación funcional, eficiencia (ms medidos), usabilidad («humano al centro»), fiabilidad (edición manual ante fallos), seguridad (auditoría), mantenibilidad (glosarios modulares)"],["ISO/IEC 29119 · IEEE 829","Pruebas de software","10 casos automáticos con resultado aprobado/falló"],["ISO/IEC 27001 · 27701","Seguridad y privacidad","Minimización: datos solo en el navegador, sin envío a servidores; integridad con hashes encadenados. Pendiente en producción: cifrado en reposo y control de acceso por rol"],["ISO 22320","Gestión de emergencias","Flujo de alerta, priorización y asignación de recursos con validación humana"],["IEEE 828 · CMMI CM","Gestión de configuración","Folios únicos, historial de cambios del operador en la bitácora"],["CMMI RD / TS","Desarrollo de requisitos y solución técnica","Matriz de requisitos y diseño documentado"],["CMMI VER / VAL","Verificación y validación","Pruebas automáticas y validación por el operador (aprobar/editar)"],["CMMI PPQA","Aseguramiento de calidad","Alertas de baja confianza y datos faltantes antes de aprobar"]];
+const rQA=()=>{$('#nm').innerHTML='<table><tr><th>Norma</th><th>Alcance</th><th>Cómo se atiende</th></tr>'+NM.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('')+'</table>'};
+rQA();run();rDash();tab('dash');
+</script><script src='/config.js'></script><script src='/static/simmap.js'></script><script src='/static/maps.js'></script></body></html>

@@ -80,6 +80,14 @@ tr.okr td{background:rgba(16,185,129,.09)}tr.errr td{background:rgba(239,68,68,.
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 .b[disabled]{opacity:.55;cursor:progress;transform:none!important;filter:none!important;box-shadow:none!important}
 #toasts{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;flex-direction:column;gap:10px}
+/* ── 8 · Tendencia 2026 (Figma): elementos 3D e inmersivos — radar + tilt, sin WebGL ── */
+div.sim{position:relative}
+div.sim::after{content:'';position:absolute;inset:0;border-radius:8px;pointer-events:none;background:conic-gradient(from 0deg at 50% 50%,rgba(99,102,241,.22),rgba(99,102,241,.06) 45deg,transparent 80deg);mix-blend-mode:screen;animation:radar 5s linear infinite}
+@keyframes radar{from{transform:rotate(0)}to{transform:rotate(1turn)}}
+.c[data-tilt]{will-change:transform}
+.c[data-tilt] #map2{filter:drop-shadow(0 18px 30px rgba(67,56,202,.16))}
+@keyframes gyro{from{opacity:0;transform:perspective(900px) rotateX(9deg) translateY(12px)}to{opacity:1;transform:none}}
+.p.on .c[data-tilt]{animation:gyro .55s cubic-bezier(.21,.65,.35,1) both}
 @media(max-width:800px){nav#nav{position:static;width:auto;flex-direction:row;padding:10px;overflow-x:auto;box-shadow:none}.brand{display:none}header,main{margin-left:0}header{padding:20px 18px 96px}.bento{grid-template-columns:1fr}}
 @media print{header,nav,.no-print,#toasts{display:none!important}.p{display:none!important}#p-rep{display:block!important}.p.on>*{animation:none!important}body{background:#fff;color:#000}.c{box-shadow:none}main{margin:0!important;padding:0!important}}
 </style></head><body>
@@ -87,7 +95,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 <nav id="nav"></nav>
 <main>
 <section class="p on" id="p-dash"><div class="g" id="kp"></div>
-<div class="g bento"><div class="c"><h2>Mapa operativo</h2><svg id="map2" viewBox="0 0 400 300" style="width:100%;border-radius:8px"></svg></div><div class="c"><h2>Reportes por tipo de incidente</h2><div style="height:260px"><canvas id="ch"></canvas></div></div></div>
+<div class="g bento"><div class="c" data-tilt><h2>Mapa operativo</h2><svg id="map2" viewBox="0 0 400 300" style="width:100%;border-radius:8px"></svg></div><div class="c"><h2>Reportes por tipo de incidente</h2><div style="height:260px"><canvas id="ch"></canvas></div></div></div>
 <div class="c"><h2>Reportes recientes</h2><div class="w" id="dl"></div></div>
 <div class="c mu">Los datos se sincronizan con el servidor (base de datos) al iniciar sesión. «El sistema recomienda; el operador decide».</div></section>
 
@@ -301,5 +309,6 @@ const RQ=[["RF-01","Capturar audio (micrófono) o texto con metadatos de hora e 
 $('#rq').innerHTML='<table><tr><th>ID</th><th>Requisito</th><th>Módulo</th><th>Prueba</th></tr>'+RQ.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('')+'</table>';
 const NM=[["ISO/IEC/IEEE 12207","Ciclo de vida del software","Requisitos → diseño → construcción → verificación con evidencia trazable en esta pestaña"],["ISO/IEC/IEEE 29148 (sucesor de IEEE 830)","Ingeniería de requisitos","Requisitos con ID, verificables y ligados a pruebas"],["IEEE 1016","Descripción del diseño","Arquitectura de 4 módulos y pipeline de 5 etapas como compilador (léxico, sintáctico, semántico, destino)"],["ISO/IEC 25010","Calidad del producto","Adecuación funcional, eficiencia (ms medidos), usabilidad («humano al centro»), fiabilidad (edición manual ante fallos), seguridad (auditoría), mantenibilidad (glosarios modulares)"],["ISO/IEC 29119 · IEEE 829","Pruebas de software","10 casos automáticos con resultado aprobado/falló"],["ISO/IEC 27001 · 27701","Seguridad y privacidad","Minimización: datos solo en el navegador, sin envío a servidores; integridad con hashes encadenados. Pendiente en producción: cifrado en reposo y control de acceso por rol"],["ISO 22320","Gestión de emergencias","Flujo de alerta, priorización y asignación de recursos con validación humana"],["IEEE 828 · CMMI CM","Gestión de configuración","Folios únicos, historial de cambios del operador en la bitácora"],["CMMI RD / TS","Desarrollo de requisitos y solución técnica","Matriz de requisitos y diseño documentado"],["CMMI VER / VAL","Verificación y validación","Pruebas automáticas y validación por el operador (aprobar/editar)"],["CMMI PPQA","Aseguramiento de calidad","Alertas de baja confianza y datos faltantes antes de aprobar"]];
 const rQA=()=>{$('#nm').innerHTML='<table><tr><th>Norma</th><th>Alcance</th><th>Cómo se atiende</th></tr>'+NM.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('')+'</table>'};
+if(!matchMedia('(prefers-reduced-motion:reduce)').matches)document.querySelectorAll('[data-tilt]').forEach(t=>{t.addEventListener('mousemove',e=>{const r=t.getBoundingClientRect();t.style.transform=`perspective(900px) rotateX(${((.5-(e.clientY-r.top)/r.height)*4).toFixed(2)}deg) rotateY(${(((e.clientX-r.left)/r.width-.5)*4).toFixed(2)}deg)`});t.addEventListener('mouseleave',()=>t.style.transform='')});
 rQA();run();rDash();tab('dash');
 </script><script src='/config.js'></script><script src='/static/simmap.js'></script><script src='/static/maps.js'></script></body></html>

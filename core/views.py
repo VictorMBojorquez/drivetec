@@ -82,7 +82,7 @@ def _index_cached(): return (Path(__file__).parent/'app'/'index.html').read_text
 
 @login_required
 def config(request):
-    return HttpResponse('window.DT='+json.dumps({'key':settings.GOOGLE_MAPS_KEY})+';',content_type='application/javascript')
+    return HttpResponse('window.DT='+json.dumps({'key':settings.GOOGLE_MAPS_KEY,'user':request.user.username})+';',content_type='application/javascript')
 
 @api
 @ratelimit(120,60)

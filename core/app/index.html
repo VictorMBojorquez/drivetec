@@ -3,7 +3,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Drive Tec · Gestión inteligente de llamadas de emergencia</title>
 <link href='https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap' rel='stylesheet'>
-<script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'></script>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9A%A8%3C/text%3E%3C/svg%3E">
+<meta name="description" content="Drive Tec: transcripción, traducción y gestión inteligente de llamadas de emergencia con Whisper local y auditoría verificable.">
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f3f6fb;--sf:#fff;--tx:#0f1f3a;--mu:#5b6b85;--ac:#1479f5;--bd:#d8e0ee;--rd:#d93a3a;--gn:#1a9b5a;--am:#d98a0b}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -44,8 +46,22 @@ main{margin:-80px 0 0 230px;max-width:none;padding:0 30px 30px}
 th{text-transform:uppercase;font-size:11px;letter-spacing:.4px}
 @media(max-width:800px){nav#nav{position:static;width:auto;flex-direction:row;padding:8px;overflow-x:auto}.brand{display:none}header,main{margin-left:0}}
 @media print{main{margin:0!important;padding:0!important}}
+::selection{background:rgba(94,114,228,.3)}
+*{scrollbar-width:thin;scrollbar-color:var(--bd) transparent}::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:var(--bd);border-radius:8px}
+.b[disabled]{opacity:.55;cursor:progress}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.cm{height:8px;background:var(--bd);border-radius:99px;margin-top:8px;overflow:hidden}.cm i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#2dce89,#5e72e4);transition:width .4s,background .3s}
+.toast{background:var(--sf);color:var(--tx);border:1px solid var(--bd);border-left:4px solid var(--ac);box-shadow:0 10px 30px rgba(7,16,31,.18);padding:10px 14px;border-radius:8px;font-size:14px;opacity:0;transform:translateY(12px);transition:.25s;max-width:340px}
+.toast.on{opacity:1;transform:none}.toast.ok{border-left-color:#2dce89}.toast.err{border-left-color:#f5365c}
+.st{display:flex;gap:4px;margin:12px 0 2px}.st b{flex:1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--mu);border-top:3px solid var(--bd);padding-top:6px;text-align:center}
+.st b.d{color:var(--gn);border-top-color:#2dce89}.st b.o{color:var(--ac);border-top-color:#5e72e4}
+.tag.borrador{background:var(--bd)}.tag.aprobado{background:#d98a0b;color:#fff}.tag.despachado{background:#1479f5;color:#fff}.tag.cerrado{background:#1a9b5a;color:#fff}
+tr.okr td{background:rgba(45,206,137,.08)}tr.errr td{background:rgba(245,54,92,.08)}
+.c{transition:transform .15s}.c:hover{transform:translateY(-1px)}
+#toasts{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;flex-direction:column;gap:8px}
+@media print{#toasts{display:none!important}}
 </style></head><body>
-<header><div><h1>Drive Tec</h1><small>Escuchar · transcribir · traducir · asignar</small></div><div class='chip'>Operador · Turno A</div></header>
+<header><div><h1>Drive Tec</h1><small>Escuchar · transcribir · traducir · asignar</small></div><div class='chip' id='who'>Operador · Turno A</div></header>
 <nav id="nav"></nav>
 <main>
 <section class="p on" id="p-dash"><div class="g" id="kp"></div>
@@ -58,7 +74,7 @@ th{text-transform:uppercase;font-size:11px;letter-spacing:.4px}
 <button class="b" id="mic">🎙 Escuchar (navegador)</button><button class="b" id="micS">🎧 Transcribir (servidor)</button><button class="b s" id="clr">Limpiar</button>
 <label>Transcripción (también puedes escribir o pegar)</label><textarea id="txt" placeholder="I need an ambulance, there was a crash near the bridge and two people hurt"></textarea>
 <label>Escenarios de prueba</label><div id="sc"></div></div>
-<div class="c"><h2 style="display:flex;align-items:center;gap:10px">2 · Traducción al español <button class="b s" id="trs" style="font-size:11px;font-weight:700;padding:4px 12px;margin-left:auto">🌐 Servidor (Google)</button></h2><div id="tr" class="mu">Sin entrada.</div><div id="meta" class="mu" style="margin-top:8px"></div><label style="margin-top:6px"><input type="checkbox" id="tauto" style="width:auto;display:inline"> Traducir automáticamente con el servidor (máx 4 000 caracteres)</label></div></div>
+<div class="c"><h2 style="display:flex;align-items:center;gap:10px">2 · Traducción al español <button class="b s" id="trs" style="font-size:11px;font-weight:700;padding:4px 12px;margin-left:auto">🌐 Servidor (Google)</button></h2><div id="tr" class="mu">Sin entrada.</div><div id="meta" class="mu" style="margin-top:8px"></div><div class="cm" aria-hidden="true"><i id="cmf"></i></div><label style="margin-top:6px"><input type="checkbox" id="tauto" style="width:auto;display:inline"> Traducir automáticamente con el servidor (máx 4 000 caracteres)</label></div></div>
 <div class="c"><h2>3 · Análisis (léxico → sintáctico → semántico)</h2><div class="g"><div><b>Tabla de símbolos</b><div class="w" id="sym"></div></div><div><b>Errores semánticos señalados</b><div id="errs"></div><div id="rec" style="margin-top:10px"></div></div></div>
 <button class="b gn" id="gen">Generar reporte automático</button></div></section>
 
@@ -74,8 +90,10 @@ th{text-transform:uppercase;font-size:11px;letter-spacing:.4px}
 <div class="c"><h2>Matriz de alineación normativa</h2><div class="w" id="nm"></div>
 <p class="mu">Alineación de diseño y proceso con estas normas; no constituye certificación ni evaluación formal CMMI, que requieren auditor externo.</p></div></section>
 </main>
+<div id="toasts" aria-live="polite"></div>
 <script>
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),csrf=()=>(document.cookie.match(/csrftoken=([^;]+)/)||[])[1]||'';
+const toast=(m,k)=>{const t=document.createElement('div');t.className='toast '+(k||'');t.textContent=m;$('#toasts').appendChild(t);requestAnimationFrame(()=>t.classList.add('on'));setTimeout(()=>{t.classList.remove('on');setTimeout(()=>t.remove(),300)},k==='err'?6500:3800)};
 const LS='drivetec_v1',U0=()=>[["A-12","Ambulancia",190,100],["A-07","Ambulancia",320,200],["P-07","Patrulla",230,170],["P-03","Patrulla",70,200],["B-03","Bomberos",260,60],["B-01","Bomberos",150,250]].map(([id,t,x,y])=>({id,t,x,y,busy:false}));
 let S={reports:[],seq:2041,log:[],units:U0(),sel:0};
 try{const r=localStorage.getItem(LS);if(r)S=JSON.parse(r)}catch(e){}
@@ -129,6 +147,7 @@ $('#sc').onclick=e=>{if(e.target.dataset.i){$('#txt').value=SC[e.target.dataset.
 let cur=null,t0=null,rec=null,voiceOn=false,vtmr=null,vbuf='',vLast=0,vRep=0;
 function paint(a,v){$('#tr').innerHTML=v?`<b>${esc(a.es)}</b>`:'Sin entrada.';
  $('#meta').textContent=v?`Idioma detectado: ${a.lang.toUpperCase()} · confianza ${Math.round(a.conf*100)}% · ${a.tk} tokens · ${a.ms} ms · Motor: ${a.engine==='local'?'glosario':a.engine}`:'';
+ const cf=$('#cmf');if(cf){cf.style.width=v?Math.max(4,Math.round(a.conf*100))+'%':'0%';cf.style.background=v&&a.conf<.6?'linear-gradient(90deg,#f5365c,#fb6340)':''}
  $('#sym').innerHTML='<table>'+Object.entries(a.sym).map(([k,x])=>`<tr><td><code>${k}</code></td><td>${x==null?'<span class="er">⚠ faltante</span>':esc(x)}</td></tr>`).join('')+'</table>';
  $('#errs').innerHTML=a.errs.length?a.errs.map(e=>`<div class="er">⚠ ${esc(e)}</div>`).join(''):(v?'<div class="ok">✔ Sin errores semánticos</div>':'');
  const r=a.rc;$('#rec').innerHTML=v?`<b>Unidad sugerida:</b> ${r.main?`${r.main.id} (${r.main.t}, ${r.main.km.toFixed(1)} km)`:'— requiere ubicación/tipo'} ${a.prio?`<span class="tag ${a.prio}">${a.prio}</span>`:''}`:''}
@@ -145,7 +164,7 @@ $('#clr').onclick=()=>{if(voiceOn){stopRec();$('#mic').textContent='🎙 Escucha
 function vShow(txt){$('#txt').value=txt.trim();run()}
 function stopRec(){voiceOn=false;clearTimeout(vtmr);if(rec){try{rec.stop()}catch(e){}}}
 function startRec(){const R=window.SpeechRecognition||window.webkitSpeechRecognition;
- if(!R){alert('Este navegador no ofrece reconocimiento de voz. Usa Chrome/Edge, o el botón «Transcribir (servidor)» que funciona en cualquier navegador.');return}
+ if(!R){toast('Este navegador no ofrece reconocimiento de voz. Usa Chrome/Edge, o el botón «Transcribir (servidor)» que funciona en cualquier navegador.','err');return}
  vbuf='';$('#mic').textContent='⏹ Detener (navegador)';
  try{rec=new R()}catch(e){rec=null;return}
  rec.lang=$('#sl').value;rec.continuous=true;rec.interimResults=true;rec.maxAlternatives=1;
@@ -153,7 +172,7 @@ function startRec(){const R=window.SpeechRecognition||window.webkitSpeechRecogni
   vShow(vbuf+interim)};
  rec.onerror=e=>{const k=e&&e.error||'';
   if(k==='not-allowed'||k==='service-not-allowed'){voiceOn=false;rec=null;$('#mic').textContent='🎙 Escuchar (navegador)';
-   alert('Permiso de micrófono denegado. Permita el acceso con el ícono 🔒 de la barra de direcciones o en chrome://settings/content/microphone.')
+   toast('Permiso de micrófono denegado. Permita el acceso con el ícono 🔒 de la barra de direcciones o en chrome://settings/content/microphone.','err')
   }else if(k==='audio-capture'){voiceOn=false;rec=null;$('#mic').textContent='🎙 Escuchar (navegador)'}
  }; // 'no-speech' y 'network' se manejan con el reinicio de onend
  rec.onend=()=>{rec=null;clearTimeout(vtmr);
@@ -162,43 +181,45 @@ function startRec(){const R=window.SpeechRecognition||window.webkitSpeechRecogni
   vLast=now;
   if(voiceOn&&vRep<6){vtmr=setTimeout(startRec,300)}   // Chrome corta al detectar silencio largo: se reinicia solo
   else if(voiceOn){voiceOn=false;$('#mic').textContent='🎙 Escuchar (navegador)';
-   alert('El micrófono se cierra enseguida. Cierra otras apps que lo usen (Zoom, Meet…) o revisa: chrome://settings/content/microphone y el ícono 🔒 de esta página.')}
+   toast('El micrófono se cierra enseguida. Cierra otras apps que lo usen (Zoom, Meet…) o revisa: chrome://settings/content/microphone y el ícono 🔒 de esta página.','err')}
   else $('#mic').textContent='🎙 Escuchar (navegador)'};
- try{rec.start();voiceOn=true;if(vRep==null)vRep=0}catch(e){rec=null;voiceOn=false;$('#mic').textContent='🎙 Escuchar (navegador)';alert('No se pudo iniciar el micrófono: '+((e&&e.message)||e))}}
+ try{rec.start();voiceOn=true;if(vRep==null)vRep=0}catch(e){rec=null;voiceOn=false;$('#mic').textContent='🎙 Escuchar (navegador)';toast('No se pudo iniciar el micrófono: '+((e&&e.message)||e),'err')}}
 $('#mic').onclick=()=>{if(voiceOn){stopRec();$('#mic').textContent='🎙 Escuchar (navegador)';return}
  stopRec();startRec()};
 // Transcripción en servidor (MediaRecorder → /api/transcribe → faster-whisper)
 let mrec=null,mch=[];
 $('#micS').onclick=async()=>{const b=$('#micS');if(mrec&&mrec.state==='recording'){mrec.stop();return}
  if(voiceOn){stopRec();$('#mic').textContent='🎙 Escuchar (navegador)'}
- if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){alert('Este navegador no permite grabar audio.');return}
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('Este navegador no permite grabar audio.','err');return}
  try{const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
   mch=[];mrec=new MediaRecorder(st);
   mrec.ondataavailable=e=>{if(e.data.size)mch.push(e.data)};   // chunks cada 250 ms: si algo corta, se conserva lo grabado
   mrec.onstop=async()=>{b.textContent='🎧 Transcribir (servidor)';st.getTracks().forEach(t=>t.stop());b.disabled=true;
    try{
-    if(!mch.length){alert('La grabación fue muy corta o no capturó audio. Pulsa el botón, habla varios segundos y detén.');b.disabled=false;return}
+    if(!mch.length){toast('La grabación fue muy corta o no capturó audio. Pulsa el botón, habla varios segundos y detén.','err');b.disabled=false;return}
     const fd=new FormData();fd.append('audio',new Blob(mch,{type:mrec.mimeType||'audio/webm'}),'llamada.webm');
     const r=await fetch('/api/transcribe',{method:'POST',credentials:'same-origin',headers:{'X-CSRFToken':csrf()},body:fd}),d=await r.json();
     if(d&&d.text){vShow(d.text);$('#meta').textContent='Whisper (servidor): idioma '+d.lang+' · '+d.dur+' s de audio';t0=t0||Date.now();if($('#tauto').checked)srvTr(true)}
-    else alert((d&&d.error)||'No se pudo transcribir')}
-   catch(e){alert('Error al subir el audio: '+((e&&e.message)||e))}
+    else toast((d&&d.error)||'No se pudo transcribir','err')}
+   catch(e){toast('Error al subir el audio: '+((e&&e.message)||e),'err')}
    b.disabled=false};
   mrec.start(250);b.textContent='⏹ Detener transcripción (Whisper)'}
- catch(e){alert('Micrófono no disponible: '+((e&&e.message)||e))}};
-$('#gen').onclick=()=>{if(!cur||!cur.tk){alert('Captura o escribe una llamada primero.');return}
+ catch(e){toast('Micrófono no disponible: '+((e&&e.message)||e),'err')}};
+$('#gen').onclick=()=>{if(!cur||!cur.tk){toast('Captura o escribe una llamada primero.','err');return}
  const a=cur,folio='DT-2026-'+(++S.seq),r={folio,dt:new Date().toLocaleString('es-MX'),lang:a.lang,dur:Math.round((Date.now()-(t0||Date.now()))/1000),tipo:a.tipo,uk:a.uk,ub:a.ub,her:a.her,prio:a.prio,orig:a.orig,es:a.es,conf:a.conf,cond:a.cond,errs:a.errs,unit:a.rc.main?a.rc.main.id:'',status:'borrador',t0:t0||Date.now(),resp:null,day:new Date().toDateString()};
  S.reports.unshift(r);S.sel=0;
  ['Captura: '+r.orig.length+' caracteres','Transcripción/Traducción '+a.lang+'→es conf '+Math.round(a.conf*100)+'%','Extracción: '+(a.tipo||'?')+'/'+(a.ub||'?')+'/'+(a.her??'?'),'Reporte generado, unidad sugerida '+(r.unit||'ninguna')].forEach(d=>log(folio,d));
  save();$('#txt').value='';t0=null;run();tab('rep')};
+const STEPS=['borrador','aprobado','despachado','cerrado'];
+const stepper=s=>{const i=STEPS.indexOf(s||'');return `<div class="st">${STEPS.map((k,j)=>`<b class="${j<i?'d':j===i?'o':''}">${k}</b>`).join('')}</div>`};
 const sumTxt=r=>`${TN[r.tipo]||'Incidente sin clasificar'} ${r.ub?'en '+r.ub:'(ubicación sin confirmar)'}. Personas/heridos: ${r.her??'sin dato'}. Prioridad: ${r.prio||'sin determinar'}.`;
 function rDash(){const fr=S.units.filter(u=>!u.busy).length,act=S.reports.filter(r=>r.status!=='cerrado').length,tod=S.reports.filter(r=>r.day===new Date().toDateString()).length,rs=S.reports.filter(r=>r.resp!=null),av=rs.length?Math.round(rs.reduce((a,r)=>a+r.resp,0)/rs.length):null;
  $('#kp').innerHTML=[[act,'Llamadas activas','phone','linear-gradient(87deg,#f5365c,#f56036)','Casos sin cerrar'],[tod,'Reportes hoy','doc','linear-gradient(87deg,#fb6340,#fbb140)','Último folio DT-2026-'+S.seq],[fr+'/'+S.units.length,'Unidades libres','truck','linear-gradient(87deg,#2dce89,#2dcecc)','Disponibles para despacho'],[av==null?'—':Math.floor(av/60)+':'+String(av%60).padStart(2,'0'),'Respuesta promedio','clock','linear-gradient(87deg,#11cdef,#1171ef)','mm:ss hasta el despacho']].map(([k,l,i,g,f])=>`<div class='c'><div class='kt'><div><div class='kl'>${l}</div><div class='k'>${k}</div></div><div class='ic' style='background:${g}'>${ico(i)}</div></div><div class='kf'>${f}</div></div>`).join('');dmap();chart();
- $('#dl').innerHTML=S.reports.length?'<table><tr><th>Folio</th><th>Hora</th><th>Incidente</th><th>Prioridad</th><th>Unidad</th><th>Estado</th></tr>'+S.reports.slice(0,8).map((r,i)=>`<tr><td><a href="#" data-i="${i}">${r.folio}</a></td><td>${r.dt}</td><td>${TN[r.tipo]||'—'}</td><td><span class="tag ${r.prio||''}">${r.prio||'—'}</span></td><td>${r.unit||'—'}</td><td>${r.status}</td></tr>`).join('')+'</table>':'<span class="mu">Sin reportes todavía.</span>'}
+ $('#dl').innerHTML=S.reports.length?'<table><tr><th>Folio</th><th>Hora</th><th>Incidente</th><th>Prioridad</th><th>Unidad</th><th>Estado</th></tr>'+S.reports.slice(0,8).map((r,i)=>`<tr><td><a href="#" data-i="${i}">${r.folio}</a></td><td>${r.dt}</td><td>${TN[r.tipo]||'—'}</td><td><span class="tag ${r.prio||''}">${r.prio||'—'}</span></td><td>${r.unit||'—'}</td><td><span class="tag ${r.status}">${r.status}</span></td></tr>`).join('')+'</table>':'<span class="mu">Sin reportes todavía.</span>'}
 $('#dl').onclick=e=>{if(e.target.dataset.i!=null){e.preventDefault();S.sel=+e.target.dataset.i;tab('rep')}};
 function rRep(){const R=S.reports;$('#rs').innerHTML=R.map((r,i)=>`<option value="${i}" ${i===S.sel?'selected':''}>${r.folio} · ${TN[r.tipo]||'—'}</option>`).join('');if(!R.length)return;const r=R[S.sel]||R[0],ed=r.status==='borrador';
  const opts=(arr,v)=>arr.map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('');
- $('#rv').innerHTML=`<div class="c"><h2>Reporte ${r.folio} <span class="tag">${r.status}</span></h2>
+ $('#rv').innerHTML=`<div class="c"><h2>Reporte ${r.folio} <span class="tag">${r.status}</span></h2>${stepper(r.status)}
  <table><tr><th>Fecha y hora</th><td>${r.dt}</td><th>Idioma original</th><td>${r.lang.toUpperCase()}</td></tr><tr><th>Duración</th><td>${Math.floor(r.dur/60)}:${String(r.dur%60).padStart(2,'0')}</td><th>Confianza traducción</th><td>${Math.round(r.conf*100)}%</td></tr></table>
  <label>Tipo de incidente</label><select data-f="tipo" ${ed?'':'disabled'}>${opts([['','Sin clasificar'],...Object.entries(TN)],r.tipo||'')}</select>
  <label>Ubicación</label><select data-f="uk" ${ed?'':'disabled'}>${opts([['','Sin confirmar'],...Object.entries(GZ).map(([k,v])=>[k,v[0]])],r.uk||'')}</select>
@@ -217,7 +238,7 @@ $('#rv').onchange=e=>{const r=S.reports[S.sel],f=e.target.dataset.f;if(!f)return
 $('#rv').onclick=e=>{const a=e.target.dataset.a;if(!a)return;const r=S.reports[S.sel];
  if(a==='pdf'){window.print();return}
  if(a==='ap'){r.status='aprobado';log(r.folio,'Reporte aprobado por operador')}
- if(a==='dp'){const u=S.units.find(u=>u.id===r.unit);if(!u){alert('Asigna una unidad primero.');return}u.busy=true;r.status='despachado';r.resp=Math.round((Date.now()-r.t0)/1000);log(r.folio,'Despacho de '+u.id+', respuesta '+r.resp+'s')}
+ if(a==='dp'){const u=S.units.find(u=>u.id===r.unit);if(!u){toast('Asigna una unidad primero.','err');return}u.busy=true;r.status='despachado';r.resp=Math.round((Date.now()-r.t0)/1000);log(r.folio,'Despacho de '+u.id+', respuesta '+r.resp+'s')}
  if(a==='cl'){const u=S.units.find(u=>u.id===r.unit);if(u)u.busy=false;r.status='cerrado';log(r.folio,'Incidente cerrado; unidad liberada')}
  save();rRep()};
 function rUni(){const r=S.reports[S.sel],inc=r&&r.uk?GZ[r.uk]:null,col={Ambulancia:'#1479f5',Patrulla:'#7a8699',Bomberos:'#f08a1c'};let s='';
@@ -228,11 +249,18 @@ function rUni(){const r=S.reports[S.sel],inc=r&&r.uk?GZ[r.uk]:null,col={Ambulanc
  $('#ul').innerHTML='<table><tr><th>Unidad</th><th>Tipo</th><th>Estado</th><th></th></tr>'+S.units.map(u=>`<tr><td>${u.id}</td><td>${u.t}</td><td>${u.busy?'<span class="er">ocupada</span>':'<span class="ok">libre</span>'}</td><td>${u.busy?`<button class="b s" data-u="${u.id}">Liberar</button>`:''}</td></tr>`).join('')+'</table>'}
 $('#ul').onclick=e=>{const u=S.units.find(x=>x.id===e.target.dataset.u);if(u){u.busy=false;log('UNIDAD','Liberación manual de '+u.id);save();rUni()}};
 const BASE=`<rect width='400' height='300' style='fill:var(--bd)' opacity='.45'/><path d='M150 0C175 60 150 120 195 170S245 250 225 300H250C285 245 235 195 220 150S205 60 180 0Z' fill='#5e72e4' opacity='.7'/><path d='M300 0C325 40 360 25 400 70V0Z' fill='#5e72e4' opacity='.7'/><path d='M0 215C45 200 85 250 125 300H0Z' fill='#5e72e4' opacity='.7'/><path d='M270 190C300 175 330 200 345 240' stroke='#5e72e4' stroke-width='6' fill='none' opacity='.55'/>`;
-let CH;
 function dmap(){const col={Ambulancia:'#2dce89',Patrulla:'#525f7f',Bomberos:'#fb6340'};let s=BASE;for(const k in GZ)s+=`<text x='${GZ[k][1]+7}' y='${GZ[k][2]+3}'>${GZ[k][0]}</text>`;
- S.reports.filter(r=>r.status!=='cerrado'&&r.uk).forEach(r=>{const g=GZ[r.uk];s+=`<circle cx='${g[1]}' cy='${g[2]}' r='10' fill='#f5365c' opacity='.3'/><circle cx='${g[1]}' cy='${g[2]}' r='4' fill='#f5365c'/>`});
+ S.reports.filter(r=>r.status!=='cerrado'&&r.uk).forEach(r=>{const g=GZ[r.uk];s+=`<circle cx='${g[1]}' cy='${g[2]}' r='10' fill='#f5365c' opacity='.35'><animate attributeName='r' values='8;16;8' dur='2s' repeatCount='indefinite'/><animate attributeName='opacity' values='.35;0;.35' dur='2s' repeatCount='indefinite'/></circle><circle cx='${g[1]}' cy='${g[2]}' r='4' fill='#f5365c'/>`});
  S.units.forEach(u=>s+=`<circle cx='${u.x}' cy='${u.y}' r='6' fill='${col[u.t]}' stroke='#fff' stroke-width='1.5' opacity='${u.busy?.4:1}'/><text x='${u.x+8}' y='${u.y-6}'>${u.id}</text>`);$('#map2').innerHTML=s}
-function chart(){if(!window.Chart)return;Chart.defaults.color=getComputedStyle(document.body).color;const cnt=Object.keys(TN).map(k=>S.reports.filter(r=>r.tipo===k).length);if(CH)CH.destroy();CH=new Chart($('#ch'),{type:'bar',data:{labels:Object.values(TN),datasets:[{label:'Reportes',data:cnt,backgroundColor:['#f5365c','#fb6340','#ffd600','#11cdef'],borderRadius:4}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}}},maintainAspectRatio:false}})}
+function chart(){const c=$('#ch');if(!c)return;const pw=c.parentElement||c,w=pw.clientWidth||300,h=pw.clientHeight||260,dpr=window.devicePixelRatio||1;
+ c.width=w*dpr;c.height=h*dpr;c.style.width=w+'px';c.style.height=h+'px';const x=c.getContext('2d');x.scale(dpr,dpr);x.clearRect(0,0,w,h);
+ const cs=getComputedStyle(document.documentElement),TXc=(cs.getPropertyValue('--tx')||'#333').trim(),MUc=(cs.getPropertyValue('--mu')||'#888').trim(),BDc=(cs.getPropertyValue('--bd')||'#d8e0ee').trim();
+ const keys=Object.keys(TN),cnt=keys.map(k=>S.reports.filter(r=>r.tipo===k).length),max=Math.max(1,...cnt),cols=['#f5365c','#fb6340','#ffd600','#11cdef'],bw=Math.min(90,(w-48)/4),gap=(w-4*bw)/5;
+ x.strokeStyle=BDc;x.lineWidth=1;x.beginPath();x.moveTo(0,h-40.5);x.lineTo(w,h-40.5);x.stroke();
+ cnt.forEach((n,i)=>{const gx=gap+i*(bw+gap),bh=n?Math.max(10,n/max*(h-84)):0,by=h-42-bh;x.fillStyle=cols[i];x.beginPath();
+  if(x.roundRect)x.roundRect(gx,by,bw,bh,[6,6,0,0]);else x.rect(gx,by,bw,bh);x.fill();
+  x.fillStyle=TXc;x.font='700 15px system-ui';x.textAlign='center';if(n)x.fillText(String(n),gx+bw/2,by-6);
+  x.fillStyle=MUc;x.font='10px system-ui';const t=(Object.values(TN)[i]||'').split(/[\s/]+/);x.fillText(t[0],gx+bw/2,h-27);if(t[1])x.fillText(t[1],gx+bw/2,h-16)})}  // gráfica nativa: sin CDN, funciona offline
 function rAud(){$('#al').innerHTML=S.log.length?'<table><tr><th>#</th><th>Hora (UTC)</th><th>Folio/Etapa</th><th>Evento</th><th>Hash</th></tr>'+S.log.map((e,i)=>`<tr><td>${i+1}</td><td>${e.t.slice(0,19)}</td><td>${esc(e.st)}</td><td>${esc(e.d)}</td><td><code>${e.h}</code></td></tr>`).join('')+'</table>':'<span class="mu">Sin eventos.</span>'}
 $('#vf').onclick=()=>{$('#vr').innerHTML=chainOK(S.log)?' <b class="ok">✔ Cadena íntegra ('+S.log.length+' eventos)</b>':' <b class="er">✖ Se detectó alteración</b>'};
 // ---- Calidad ----
@@ -246,7 +274,7 @@ const TS=[["PR-01 Inglés: choque con 2 heridos",()=>{const a=analyze(SC[0][1],U
 ["PR-08 Traducción de baja confianza se marca",()=>analyze("the quick brown fox needs an ambulance",U0()).errs.some(e=>/baja confianza/.test(e))],
 ["PR-09 Cadena de auditoría detecta alteración",()=>{const a=[];let p='0';for(let i=0;i<3;i++){const e=mk(p,'t'+i,'s','d'+i);a.push(e);p=e.h}const ok=chainOK(a);a[1].d='x';return ok&&!chainOK(a)}],
 ["PR-10 Latencia de análisis < 50 ms",()=>analyze(SC[0][1],U0()).ms<50]];
-$('#rt').onclick=()=>{$('#tt').innerHTML='<table><tr><th>Caso</th><th>Resultado</th></tr>'+TS.map(([n,f])=>{let ok=false;try{ok=!!f()}catch(e){}return`<tr><td>${n}</td><td class="${ok?'ok':'er'}">${ok?'✔ Aprobado':'✖ Falló'}</td></tr>`}).join('')+'</table>'};
+$('#rt').onclick=()=>{let n=0;$('#tt').innerHTML='<table><tr><th>Caso</th><th>Resultado</th></tr>'+TS.map(([nm,f])=>{let ok=false;try{ok=!!f()}catch(e){}ok&&n++;return`<tr class="${ok?'okr':'errr'}"><td>${nm}</td><td class="${ok?'ok':'er'}">${ok?'✔ Aprobado':'✖ Falló'}</td></tr>`}).join('')+'</table>';toast(n===TS.length?'✅ '+n+'/'+TS.length+' pruebas aprobadas':'⚠ '+n+'/'+TS.length+' pruebas aprobadas',n===TS.length?'ok':'err')};
 const RQ=[["RF-01","Capturar audio (micrófono) o texto con metadatos de hora e idioma","Llamada en vivo","PR-01"],["RF-02","Transcribir y mostrar en vivo (Web Speech API del navegador)","Llamada en vivo","Manual"],["RF-03","Traducir EN/PT/FR a español, con código mixto, indicando confianza","Panel de traducción","PR-01, 03, 04, 08"],["RF-04","Extraer tipo, ubicación, heridos y prioridad","Tabla de símbolos","PR-01, 02"],["RF-05","Señalar datos faltantes sin asumirlos","Errores semánticos","PR-05"],["RF-06","Generar reporte editable, aprobable y exportable a PDF","Reporte","Manual"],["RF-07","Sugerir unidad más cercana; decisión final del operador","Unidades","PR-06, 07"],["RF-08","Trazabilidad auditable de cada transformación","Auditoría","PR-09"],["RNF-01","Latencia de análisis < 50 ms","Panel de traducción","PR-10"]];
 $('#rq').innerHTML='<table><tr><th>ID</th><th>Requisito</th><th>Módulo</th><th>Prueba</th></tr>'+RQ.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('')+'</table>';
 const NM=[["ISO/IEC/IEEE 12207","Ciclo de vida del software","Requisitos → diseño → construcción → verificación con evidencia trazable en esta pestaña"],["ISO/IEC/IEEE 29148 (sucesor de IEEE 830)","Ingeniería de requisitos","Requisitos con ID, verificables y ligados a pruebas"],["IEEE 1016","Descripción del diseño","Arquitectura de 4 módulos y pipeline de 5 etapas como compilador (léxico, sintáctico, semántico, destino)"],["ISO/IEC 25010","Calidad del producto","Adecuación funcional, eficiencia (ms medidos), usabilidad («humano al centro»), fiabilidad (edición manual ante fallos), seguridad (auditoría), mantenibilidad (glosarios modulares)"],["ISO/IEC 29119 · IEEE 829","Pruebas de software","10 casos automáticos con resultado aprobado/falló"],["ISO/IEC 27001 · 27701","Seguridad y privacidad","Minimización: datos solo en el navegador, sin envío a servidores; integridad con hashes encadenados. Pendiente en producción: cifrado en reposo y control de acceso por rol"],["ISO 22320","Gestión de emergencias","Flujo de alerta, priorización y asignación de recursos con validación humana"],["IEEE 828 · CMMI CM","Gestión de configuración","Folios únicos, historial de cambios del operador en la bitácora"],["CMMI RD / TS","Desarrollo de requisitos y solución técnica","Matriz de requisitos y diseño documentado"],["CMMI VER / VAL","Verificación y validación","Pruebas automáticas y validación por el operador (aprobar/editar)"],["CMMI PPQA","Aseguramiento de calidad","Alertas de baja confianza y datos faltantes antes de aprobar"]];

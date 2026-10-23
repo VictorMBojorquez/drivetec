@@ -12,6 +12,7 @@ de la decisión final**.
 [![Django](https://img.shields.io/badge/Django-5.2-green)](https://www.djangoproject.com/)
 [![Whisper](https://img.shields.io/badge/ASR-faster--whisper%20local-orange)](https://github.com/SYSTRAN/faster-whisper)
 [![Tests](https://img.shields.io/badge/Tests-23%20autom%C3%A1ticos-success)](#-pruebas)
+[![Agentes de IA](https://img.shields.io/badge/agentes_de_IA-ready-blueviolet)](AGENTS.md)
 
 > 🎓 Proyecto académico · Instituto Tecnológico de Tijuana · Lenguajes y Autómatas II
 
@@ -128,6 +129,7 @@ dt/
 │   ├── app/index.html   # frontend completo (dashboard + pipeline)
 │   └── static/          # maps.js · simmap.js (mapa canvas simulado)
 ├── start.bat / start.ps1 / crear-admin.bat
+├── CLAUDE.md · AGENTS.md       # manual para agentes de IA (Claude Code, OpenCode, Codex…)
 ├── Dockerfile · docker-compose.yml (con healthchecks)
 └── DriveTec_Documentacion.md   # documento completo del proyecto
 ```
@@ -160,6 +162,28 @@ python manage.py test      # 23 pruebas de backend: auth, roles, validación, au
 
 En la app, pestaña **Calidad y normas**: 10 casos PR-01…PR-10 (multilingüe, datos faltantes,
 unidad ocupada, latencia < 50 ms, cadena de auditoría…).
+
+---
+
+## 🤖 Agentes de IA (Claude Code y compatibles)
+
+Este repositorio está preparado para que un agente de IA trabaje en él **sin contexto previo**:
+
+| Archivo | Quién lo lee | Qué contiene |
+|---|---|---|
+| [`AGENTS.md`](AGENTS.md) | OpenCode, Codex, Cursor y cualquier agente compatible | Manual canónico: reglas de oro, comandos, mapa del código, flujo de verificación y pendientes |
+| [`CLAUDE.md`](CLAUDE.md) | Claude Code (automático al abrir la carpeta) | Importa `AGENTS.md` (`@AGENTS.md`), así la fuente única se mantiene en un solo archivo |
+
+Para trabajar con el sistema usando IA: abre la carpeta del proyecto y ejecuta `claude`
+(Claude Code) u `opencode`; el agente cargará la guía automáticamente.
+
+Reglas no negociables que el agente respetará (y que conviene que cualquier colaborador también):
+
+1. **Las 23 pruebas de backend deben quedar en verde** tras cada cambio (`python manage.py test`).
+2. El frontend vive en **un solo archivo** (`core/app/index.html`) con estilo compacto — no reformatear.
+3. **Todo en español**: código, comentarios, commits, UI y mensajes.
+4. Cero dependencias externas de runtime: la app debe funcionar sin internet ni claves (modo simulado).
+5. Verificación mínima antes de commit: `manage.py test` + `manage.py check` + `node --check` del JS.
 
 ---
 

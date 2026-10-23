@@ -3,7 +3,7 @@ RGZ={puente:[32.5276,-117.0240],hospital:[32.5236,-117.0262],centro:[32.5340,-11
 px=g=>(g+117.08)/0.14*400,py=a=>(32.56-a)/0.08*300,
 csrf=()=>(document.cookie.match(/csrftoken=([^;]+)/)||[])[1]||'',
 api=(u,b,m)=>fetch(u,{method:m||(b?'POST':'GET'),headers:{'Content-Type':'application/json','X-CSRFToken':csrf()},body:b?JSON.stringify(b):undefined,credentials:'same-origin'}).then(r=>r.json()),
-COL={Ambulancia:'#2dce89',Patrulla:'#525f7f',Bomberos:'#fb6340'},proj=u=>{u.x=px(u.lng);u.y=py(u.lat);return u},
+COL={Ambulancia:'#10b981',Patrulla:'#64748b',Bomberos:'#f59e0b'},proj=u=>{u.x=px(u.lng);u.y=py(u.lat);return u},
 inc=r=>r.lat!=null?{lat:r.lat,lng:r.lng}:r.uk?{lat:RGZ[r.uk][0],lng:RGZ[r.uk][1]}:null;
 let ready=false,maps={},mk={},tm,sims={},pos={};const SIM=!(window.DT&&DT.key),SEED={'A-12':[32.5280,-117.0290],'A-07':[32.5090,-116.9800],'P-07':[32.5330,-117.0200],'P-03':[32.4980,-117.0050],'B-03':[32.5400,-117.0100],'B-01':[32.5200,-117.0400]};
 S.units.forEach(u=>{if(u.lat==null&&SEED[u.id]){u.lat=SEED[u.id][0];u.lng=SEED[u.id][1]}if(u.lat!=null)proj(u)});
@@ -13,8 +13,8 @@ api('/api/state').then(st=>{window._dtLoaded=true;if(!st.units)return;S.units=st
 const gm=id=>maps[id]||(maps[id]=new google.maps.Map($('#g'+id),{center:{lat:32.5149,lng:-117.0382},zoom:12,mapTypeControl:false,streetViewControl:false}));
 function gdraw(id,reps){const m=gm(id);(mk[id]||[]).forEach(x=>x.setMap(null));mk[id]=[];const C=google.maps.SymbolPath.CIRCLE;
  S.units.forEach(u=>mk[id].push(new google.maps.Marker({map:m,position:{lat:u.lat,lng:u.lng},title:u.id+' · '+u.t+(u.busy?' (ocupada)':''),label:{text:u.id,fontSize:'9px',fontWeight:'700',color:'#fff'},icon:{path:C,scale:15,fillColor:COL[u.t],fillOpacity:u.busy?.4:1,strokeColor:'#fff',strokeWeight:2}})));
- reps.forEach(r=>{const c=inc(r);if(!c)return;mk[id].push(new google.maps.Marker({map:m,position:c,title:r.folio+' · '+(r.ub||''),icon:{path:C,scale:9,fillColor:'#f5365c',fillOpacity:.9,strokeColor:'#fff',strokeWeight:2}}));
-  const u=S.units.find(u=>u.id===r.unit);if(u&&reps.length===1)mk[id].push(new google.maps.Polyline({map:m,path:[c,{lat:u.lat,lng:u.lng}],strokeColor:'#f5365c'}))})}
+ reps.forEach(r=>{const c=inc(r);if(!c)return;mk[id].push(new google.maps.Marker({map:m,position:c,title:r.folio+' · '+(r.ub||''),icon:{path:C,scale:9,fillColor:'#e11d48',fillOpacity:.9,strokeColor:'#fff',strokeWeight:2}}));
+  const u=S.units.find(u=>u.id===r.unit);if(u&&reps.length===1)mk[id].push(new google.maps.Polyline({map:m,path:[c,{lat:u.lat,lng:u.lng}],strokeColor:'#e11d48'}))})}
 const hv=(a,b,c,d)=>{const p=Math.PI/180,h=Math.sin((c-a)*p/2)**2+Math.cos(a*p)*Math.cos(c*p)*Math.sin((d-b)*p/2)**2;return 12742*Math.asin(Math.sqrt(h))};
 function sdraw(id,reps){const m=sims[id];if(!m)return;m.posOf=u=>pos[u.id]||u;const I=reps.map(r=>{const c=inc(r);return c&&{lat:c.lat,lng:c.lng,folio:r.folio}}).filter(Boolean);let sel=null;
  if(reps.length===1){const c=inc(reps[0]);if(c&&reps[0].unit)sel={unit:reps[0].unit,to:c}}m.set(S.units.filter(u=>u.lat!=null).map(u=>({...u,col:COL[u.t]})),I,sel)}

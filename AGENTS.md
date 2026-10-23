@@ -115,8 +115,11 @@ Errores esperados: `401` sin sesión, `403` sin rol, `400` cuerpo inválido, `42
 $env:DEBUG='1'; python manage.py test      # → "OK" (23 pruebas)
 python manage.py check                     # → sin problemas
 node --check core/static/maps.js           # → silencio = válido
-# Extraer y revisar el <script> inline de index.html si se tocó el frontend:
-node -e "const fs=require('fs');const m=fs.readFileSync('core/app/index.html','utf8').match(/<script>([\s\S]*?)<\/script>/);fs.writeFileSync(process.env.TEMP+'/inline.js',m[1]);" ; node --check "$env:TEMP/inline.js"
+# Extraer y validar TODOS los <script> inline de index.html si se tocó el frontend.
+# IMPORTANTE: hay MÁS DE UN script (el anti-FOUC del <head> es el primero); validar solo
+# el primero es el punto ciego que dejó pasar un SyntaxError real. Valídalos todos:
+node -e "const fs=require('fs'),p=process.env.TEMP+'/dtchk';fs.rmSync(p,{force:true,recursive:true});fs.mkdirSync(p);const re=/<script>([\s\S]*?)<\/script>/g,h=fs.readFileSync('core/app/index.html','utf8');let m,n=0;while(m=re.exec(h))fs.writeFileSync(p+'/s'+(++n)+'.js',m[1]);console.log('scripts extraidos: '+n)"
+Get-ChildItem "$env:TEMP/dtchk" | ForEach-Object { node --check "$($_.FullName)" }   # silencio = todos válidos
 ```
 
 Anti-regresiones por grep: `alert(` debe dar **0** en `index.html` (usar `toast`);

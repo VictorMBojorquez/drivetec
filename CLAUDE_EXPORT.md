@@ -106,7 +106,7 @@ Errores esperados: `401` sin sesión · `403` sin rol · `400` JSON inválido ·
 | Servidor | `$env:DEBUG='1'; python manage.py runserver` (o `.\start.bat`) → http://127.0.0.1:8000/ |
 | **Pruebas** | `$env:DEBUG='1'; python manage.py test` → «OK», 23 pruebas |
 | Chequeo | `$env:DEBUG='1'; python manage.py check` |
-| JS syntax | `node --check core/static/maps.js` (y extraer el `<script>` inline de index.html) |
+| JS syntax | `node --check core/static/maps.js` + validar TODOS los `<script>` inline de index.html (hay más de uno: el anti-FOUC es el primero y no es el principal) |
 | Con IA | `.\start.ps1 -WhisperModel base -GoogleServerKey "AIza…"` |
 | Producción | `docker compose up -d --build` · HTTPS recomendado (`HTTPS=1`) |
 

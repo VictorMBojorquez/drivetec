@@ -203,7 +203,7 @@ function paint(a,v){$('#tr').innerHTML=v?`<b>${hlw(esc(a.es),[a.uk,MKT[a.tipo]])
  const cf=$('#cmf');if(cf){cf.style.width=v?Math.max(4,Math.round(a.conf*100))+'%':'0%';cf.style.background=v&&a.conf<.6?'linear-gradient(90deg,#e11d48,#f97316)':''}
  $('#sym').innerHTML='<table>'+Object.entries(a.sym).map(([k,x])=>`<tr><td><code>${k}</code></td><td>${x==null?'<span class="er">⚠ faltante</span>':esc(x)}</td></tr>`).join('')+'</table>';
  $('#errs').innerHTML=a.errs.length?a.errs.map(e=>`<div class="er">⚠ ${esc(e)}</div>`).join(''):(v?'<div class="ok">✔ Sin errores semánticos</div>':'');
- const r=a.rc;$('#rec').innerHTML=v?`<output for="txt"><b>Unidad sugerida:</b> ${r.main?`${r.main.id} (${r.main.t}, ${r.main.km.toFixed(1)} km)`:'— requiere ubicación/tipo'} ${a.prio?`<span class="tag ${a.prio}">${a.prio}</span>`}</output>`:''}
+ const r=a.rc;$('#rec').innerHTML=v?`<output for="txt"><b>Unidad sugerida:</b> ${r.main?`${r.main.id} (${r.main.t}, ${r.main.km.toFixed(1)} km)`:'— requiere ubicación/tipo'} ${a.prio?`<span class="tag ${a.prio}">${a.prio}</span>`:''}</output>`:''}
 function run(){const v=$('#txt').value;if(v&&!t0)t0=Date.now();if(!v)t0=null;cur=analyze(v,S.units);paint(cur,v)}
 let tTr=null;$('#txt').oninput=()=>{run();clearTimeout(tTr);if($('#tauto').checked)tTr=setTimeout(()=>srvTr(true),700)};
 async function srvTr(auto){const v=$('#txt').value;if(!v.trim())return;const b=$('#trs');if(b)b.disabled=true;

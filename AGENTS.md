@@ -51,6 +51,7 @@ dt/
 │   └── static/         # maps.js (sincronización + Google/sim) · simmap.js (NO tocar)
 ├── start.bat · start.ps1 · crear-admin.bat · Dockerfile · docker-compose.yml
 ├── CLAUDE.md           # importa AGENTS.md para Claude Code
+├── CLAUDE_EXPORT.md    # contexto autocontenido exportable (Claude.ai / chat sin repo)
 └── README.md
 ```
 

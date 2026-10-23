@@ -33,6 +33,7 @@
 | **Pruebas (23)** | `$env:DEBUG='1'; python manage.py test` |
 | Chequeo de sistema | `$env:DEBUG='1'; python manage.py check` |
 | Sintaxis JS | `node --check core/static/maps.js` + extraer el `<script>` de `index.html` |
+| Regenerar capa de mapa | `node tools/mkdist.js --write` (tras editar `tijuana-districts.json`) |
 | Con Whisper + Google | `.\start.ps1 -WhisperModel base -GoogleServerKey "AIza…"` |
 | Producción (VPS) | `docker compose up -d --build` |
 
@@ -48,7 +49,9 @@ dt/
 │   ├── tests.py        # 23 pruebas: auth, roles, validación, ranking, auditoría
 │   ├── app/index.html  # FRONTEND ÚNICO (ver desglose abajo)
 │   ├── migrations/     # 0001 base · 0002_seed_and_rehash (SEED + grupo «Operador» + rehash)
-│   └── static/         # maps.js (sincronización + Google/sim) · simmap.js (NO tocar)
+│   └── static/         # maps.js (sincronización + Google/sim + overlay de distritos reales) · simmap.js (NO tocar)
+├── tijuana-districts.json  # distritos de Tijuana (GeoJSON): fuente de la capa real del mapa
+├── tools/mkdist.js         # regenera la capa de distritos: node tools/mkdist.js --write
 ├── start.bat · start.ps1 · crear-admin.bat · Dockerfile · docker-compose.yml
 ├── CLAUDE.md           # importa AGENTS.md para Claude Code
 ├── CLAUDE_EXPORT.md    # contexto autocontenido exportable (Claude.ai / chat sin repo)
@@ -95,8 +98,11 @@ Errores esperados: `401` sin sesión, `403` sin rol, `400` cuerpo inválido, `42
 - **Doble cadena de auditoría**: cliente FNV-1a (`h()` + `chainOK` en el HTML) y servidor
   SHA-256 (models/views). No romper el encadenado (`p` + `t` + `st` + `d`).
 - **Modos operativos**: sin claves = glosarios deterministas + mapa canvas simulado
-  (`simmap.js`, clase `SimMap`); con `GOOGLE_SERVER_KEY` = Geocoding/Routes/Translation reales;
-  con `WHISPER_MODEL` = faster-whisper local en `views.py`.
+  (`simmap.js`, clase `SimMap`) con **distritos reales de Tijuana** — overlay dibujado por
+  `maps.js` a partir de `DIST` (generado con `node tools/mkdist.js --write` desde
+  `tijuana-districts.json`); `simmap.js` sigue intacto. Las unidades semilla, `RGZ` y
+  `simGeocode` usan lat/lng reales; con `GOOGLE_SERVER_KEY` = Geocoding/Routes/Translation
+  reales; con `WHISPER_MODEL` = faster-whisper local en `views.py`.
 - **`window.DT`** (desde `/config.js`, cargado tras el script inline): `{key, user}`; el chip
   `#who` del header lo consume en `maps.js`.
 

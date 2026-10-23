@@ -29,7 +29,7 @@ Instituto Tecnológico de Tijuana (Lenguajes y Autómatas II, 2026). Flujo:
 | Frontend | **Un solo archivo**: `core/app/index.html` (HTML+CSS+JS en línea) |
 | IA/ASR | faster-whisper local (opcional, `WHISPER_MODEL`) |
 | Traducción | Glosarios deterministas EN/PT/FR→ES (offline) o Cloud Translation API |
-| Mapa | Canvas simulado offline (clase `SimMap`) o Google Maps (con clave) |
+| Mapa | Canvas simulado offline (clase `SimMap`) con **distritos reales de Tijuana** (overlay: `tijuana-districts.json` → capa `DIST` de maps.js) o Google Maps (con clave) |
 | Estado | Público: <https://github.com/VictorMBojorquez/drivetec> (MIT, branch `main`) |
 
 ## 2 · Estructura del código
@@ -44,7 +44,9 @@ dt/
 │   ├── tests.py        # 23 pruebas: auth, roles, validación, ranking, auditoría
 │   ├── app/index.html  # FRONTEND ÚNICO (anatomía en §4)
 │   ├── migrations/     # 0001 base · 0002_seed_and_rehash (SEED de unidades + grupo «Operador» + rehash)
-│   └── static/         # maps.js (sincronización + Google/sim + chip usuario) · simmap.js (NO tocar)
+│   └── static/         # maps.js (sincronización + Google/sim + overlay de distritos reales) · simmap.js (NO tocar)
+├── tijuana-districts.json  # distritos de Tijuana (GeoJSON): fuente de la capa real del mapa
+├── tools/mkdist.js         # regenera la capa: node tools/mkdist.js --write
 ├── start.bat · start.ps1 · crear-admin.bat
 ├── Dockerfile · docker-compose.yml · requirements.txt (incl. faster-whisper>=1.0,<2)
 ├── CLAUDE.md · AGENTS.md   # manuales para agentes que SÍ tienen el repo

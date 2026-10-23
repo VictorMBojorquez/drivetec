@@ -52,7 +52,7 @@ bitácora verificable con hashes encadenados.*
 - 🎙 **Escuchar (navegador)** — dictado real-time (Chrome/Edge).
 - 🎧 **Transcribir (servidor)** — graba y manda el audio a **Whisper local**; funciona en cualquier navegador, offline.
 - 🌐 **Servidor (Google)** — traducción con Cloud Translation API para texto libre fuera del glosario (opcional).
-- Modo **sin internet ni claves**: glosarios deterministas + mapa canvas simulado. Cero costo, cero llamadas externas.
+- Modo **sin internet ni claves**: glosarios deterministas + mapa canvas simulado con los **distritos reales de Tijuana** (GeoJSON `tijuana-districts.json` como referencia, sobre el mapa simulado). Cero costo, cero llamadas externas.
 
 ---
 
@@ -127,7 +127,10 @@ dt/
 │   ├── admin.py         # /admin/ con bitácora de solo lectura
 │   ├── tests.py         # 23 pruebas de backend
 │   ├── app/index.html   # frontend completo (dashboard + pipeline)
-│   └── static/          # maps.js · simmap.js (mapa canvas simulado)
+│   └── static/          # maps.js · simmap.js (mapa canvas simulado + distritos reales de Tijuana)
+
+├── tijuana-districts.json # distritos de Tijuana (GeoJSON): referencia del mapa
+├── tools/mkdist.js        # genera la capa de distritos: node tools/mkdist.js --write
 ├── start.bat / start.ps1 / crear-admin.bat
 ├── CLAUDE.md · AGENTS.md       # manual para agentes de IA (Claude Code, OpenCode, Codex…)
 ├── CLAUDE_EXPORT.md            # mismo contexto, autocontenido, para subir a Claude.ai

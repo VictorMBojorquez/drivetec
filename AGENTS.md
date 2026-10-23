@@ -58,14 +58,17 @@ dt/
 ### Desglose de `core/app/index.html` (por orden de aparición)
 
 - **CSS**: tokens (bloque 1), base (2), estructura sidebar/header (3), motion (4), componentes
-  (5), confianza/toasts/stepper (6), estados (7), 3D inmersivo radar+tilt (8).
+  (5), confianza/toasts/stepper (6), estados (7), 3D inmersivo radar+tilt (8), HTML5 semántico
+  dialog/details/mark/kbd (9), tema (`.tg` toggle auto/claro/oscuro).
 - **JS**: helpers (`$`, `esc`, `csrf`, `toast`), estado local (`LS`), auditoría cliente
   (`h()` FNV-1a, `mk`, `log`, `chainOK`), glosarios (`D`/`M`/`GZ`/`NUM`), pipeline
   (`tok`→`detect`→`translate`→`rank`→`analyze`), UI (`TABS`, escenarios `SC`), voz
   (`startRec` Web Speech con anti-bucle, `micS` MediaRecorder→`/api/transcribe`),
   análisis/traducción (`run`, `paint`, `srvTr`), reportes (`#gen`, `rRep`, stepper),
   dashboard (`rDash`, `dmap`, `chart` canvas 2D), unidades (`rUni`), auditoría (`rAud`),
-  QA en-app (`TS` PR-01…PR-10, matriz `RQ`/`NM`).
+  QA en-app (`TS` PR-01…PR-10, matriz `RQ`/`NM`), tema (`tapply`/`#tg`), utilidades HTML5
+  (`ask()` con `<dialog>`, routing por `location.hash`, atajos Alt+1…6, resaltado `<mark>`,
+  `<output>` para la unidad sugerida).
 
 ### Endpoints (`core/urls.py` → `views.py`)
 

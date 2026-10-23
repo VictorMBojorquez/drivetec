@@ -32,7 +32,7 @@ window.rUni=()=>{ou();anim();ctrl();ready&&draw('map',S.reports.slice(S.sel,S.se
 window.rAud=()=>{oa();if($('#vs'))return;const b=document.createElement('button');b.id='vs';b.className='b s';b.textContent='Verificar en servidor (SHA-256)';
  b.onclick=async()=>{const v=await api('/api/audit/verify');$('#vr').innerHTML=v.ok?` <b class="ok">✔ Servidor: cadena íntegra (${v.count})</b>`:` <b class="er">✖ Servidor: alteración en el evento ${v.bad}</b>`};$('#vf').after(b)};
 function ctrl(){if($('#gc'))return;const d=document.createElement('div');d.id='gc';d.className='no-print';
- d.innerHTML="<label>Dirección del incidente (Google Geocoding + Routes)</label><input id='ga' placeholder='Av. Revolución 1000, Tijuana'><button class='b' id='gb'>Ubicar y calcular ETA</button><div id='gr'></div>";
+ d.innerHTML="<label>Dirección del incidente (Google Geocoding + Routes)</label><input id='ga' list='glist' placeholder='Av. Revolución 1000, Tijuana' autocomplete='street-address'><datalist id='glist'>"+Object.values(GZ).map(x=>`<option value='${x[0]}'>`).join('')+"</datalist><button class='b' id='gb'>Ubicar y calcular ETA</button><div id='gr'></div>";
  ($('#gmap')||$('#map')).before(d);$('#gb').onclick=locate}
 async function locate(){const r=S.reports[S.sel];if(!r)return alert('Genera un reporte primero.');const q=$('#ga').value.trim();if(!q)return;
  $('#gr').textContent='Buscando…';let g;try{g=await api('/api/geocode',{q})}catch(e){g={error:'x'}}if(g.error&&SIM)g=simGeocode(q);if(g.error){$('#gr').textContent=g.error;return}

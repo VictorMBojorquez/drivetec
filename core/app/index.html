@@ -8,6 +8,7 @@
 <meta name="description" content="Drive Tec: transcripción, traducción y gestión inteligente de llamadas de emergencia con Whisper local y auditoría verificable.">
 <meta name="theme-color" media="(prefers-color-scheme:light)" content="#f4f6fb">
 <meta name="theme-color" media="(prefers-color-scheme:dark)" content="#0a1120">
+<script>try{var t=localStorage.getItem('drivetec_theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
 <style>
 /* ── 1 · Design tokens: sistema semántico (color, radio, sombra), tema claro/oscuro ── */
 :root{box-sizing:border-box;color-scheme:light dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f4f6fb;--sf:#fff;--sf2:#f7f9fd;--tx:#0b1526;--mu:#5b6b85;--ac:#4f46e5;--ac-fg:#fff;--bd:#e3e8f2;--bd2:#c9d3e6;--rd:#dc2626;--gn:#059669;--am:#d97706;--ring:rgba(79,70,229,.18);--r1:10px;--r2:14px;--sh:0 1px 2px rgba(16,24,40,.05),0 2px 8px rgba(16,24,40,.05);--sh2:0 14px 34px -12px rgba(16,24,40,.24)}
@@ -88,29 +89,47 @@ div.sim::after{content:'';position:absolute;inset:0;border-radius:8px;pointer-ev
 .c[data-tilt] #map2{filter:drop-shadow(0 18px 30px rgba(67,56,202,.16))}
 @keyframes gyro{from{opacity:0;transform:perspective(900px) rotateX(9deg) translateY(12px)}to{opacity:1;transform:none}}
 .p.on .c[data-tilt]{animation:gyro .55s cubic-bezier(.21,.65,.35,1) both}
+/* ── 9 · HTML5 semántico: dialog, details, mark, kbd ── */
+mark{background:rgba(129,140,248,.35);color:inherit;border-radius:4px;padding:0 2px}
+kbd{font:700 11px/1.6 inherit;background:var(--sf2);border:1px solid var(--bd);border-bottom-width:2px;border-radius:5px;padding:1px 5px}
+details.dtl{border:1px solid var(--bd);border-radius:10px;padding:8px 12px;margin-top:10px;background:var(--sf2)}
+details.dtl summary{cursor:pointer;font-weight:600;color:var(--mu);list-style:none}
+details.dtl summary::-webkit-details-marker{display:none}
+details.dtl[open] summary{margin-bottom:6px}
+.dlg{border:0;border-radius:16px;padding:22px;max-width:420px;box-shadow:var(--sh2);background:var(--sf);color:var(--tx)}
+.dlg h3{margin:0 0 6px;font-size:16.5px}.dlg p{margin:0}
+.dlg form{display:flex;gap:8px;margin-top:16px}
+.dlg::backdrop{background:rgba(11,21,38,.5);backdrop-filter:blur(3px)}
+/* ── 9 · Tendencia 2026 (Figma): modo oscuro — selector Auto/Claro/Oscuro, persistente y sin parpadeo ── */
+:root[data-theme="light"]{color-scheme:light}:root[data-theme="dark"]{color-scheme:dark}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) header{background:linear-gradient(120deg,#1e1b4b 0,#312e81 55%,#4c1d95 100%)}:root:not([data-theme="light"]) ::selection{background:rgba(129,140,248,.4)}}
+:root[data-theme="dark"] header{background:linear-gradient(120deg,#1e1b4b 0,#312e81 55%,#4c1d95 100%)}:root[data-theme="dark"] ::selection{background:rgba(129,140,248,.4)}
+html.tt,html.tt *{transition:background-color .3s,color .3s,border-color .3s,box-shadow .3s!important}
+.tg{border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.14);color:#fff;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:7px 14px;border-radius:99px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s,transform .12s}
+.tg:hover{background:rgba(255,255,255,.26)}.tg:active{transform:scale(.97)}.tg:focus-visible{outline:2px solid #fff;outline-offset:2px}
 @media(max-width:800px){nav#nav{position:static;width:auto;flex-direction:row;padding:10px;overflow-x:auto;box-shadow:none}.brand{display:none}header,main{margin-left:0}header{padding:20px 18px 96px}.bento{grid-template-columns:1fr}}
 @media print{header,nav,.no-print,#toasts{display:none!important}.p{display:none!important}#p-rep{display:block!important}.p.on>*{animation:none!important}body{background:#fff;color:#000}.c{box-shadow:none}main{margin:0!important;padding:0!important}}
 </style></head><body>
-<header><div><h1>Drive Tec</h1><small>Escuchar · transcribir · traducir · asignar</small></div><div class='chip' id='who'>Operador · Turno A</div></header>
+<header><div><h1>Drive Tec</h1><small>Escuchar · transcribir · traducir · asignar</small></div><div class='chip' id='who'>Operador · Turno A</div><button type='button' class='tg' id='tg'></button></header>
 <nav id="nav"></nav>
 <main>
 <section class="p on" id="p-dash"><div class="g" id="kp"></div>
-<div class="g bento"><div class="c" data-tilt><h2>Mapa operativo</h2><svg id="map2" viewBox="0 0 400 300" style="width:100%;border-radius:8px"></svg></div><div class="c"><h2>Reportes por tipo de incidente</h2><div style="height:260px"><canvas id="ch"></canvas></div></div></div>
+<div class="g bento"><div class="c" data-tilt><h2>Mapa operativo</h2><svg id="map2" viewBox="0 0 400 300" role="img" aria-label="Mapa operativo con unidades e incidentes" style="width:100%;border-radius:8px"></svg></div><div class="c"><h2>Reportes por tipo de incidente</h2><div style="height:260px"><canvas id="ch" role="img" aria-label="Gráfica de reportes por tipo de incidente"></canvas></div></div></div>
 <div class="c"><h2>Reportes recientes</h2><div class="w" id="dl"></div></div>
-<div class="c mu">Los datos se sincronizan con el servidor (base de datos) al iniciar sesión. «El sistema recomienda; el operador decide».</div></section>
+<div class="c mu">Los datos se sincronizan con el servidor (base de datos) al iniciar sesión. «El sistema recomienda; el operador decide». Atajos de pestañas: <kbd>Alt</kbd>+<kbd>1</kbd>…<kbd>6</kbd>.</div></section>
 
 <section class="p" id="p-live"><div class="g"><div class="c"><h2>1 · Captura de audio / texto</h2>
 <label>Idioma del micrófono</label><select id="sl"><option value="es-MX">Español</option><option value="en-US">English</option><option value="pt-BR">Português</option><option value="fr-FR">Français</option></select>
 <button class="b" id="mic">🎙 Escuchar (navegador)</button><button class="b" id="micS">🎧 Transcribir (servidor)</button><button class="b s" id="clr">Limpiar</button>
 <label>Transcripción (también puedes escribir o pegar)</label><textarea id="txt" placeholder="I need an ambulance, there was a crash near the bridge and two people hurt"></textarea>
 <label>Escenarios de prueba</label><div id="sc"></div></div>
-<div class="c"><h2 style="display:flex;align-items:center;gap:10px">2 · Traducción al español <button class="b s" id="trs" style="font-size:11px;font-weight:700;padding:4px 12px;margin-left:auto">🌐 Servidor (Google)</button></h2><div id="tr" class="mu">Sin entrada.</div><div id="meta" class="mu" style="margin-top:8px"></div><div class="cm" aria-hidden="true"><i id="cmf"></i></div><label style="margin-top:6px"><input type="checkbox" id="tauto" style="width:auto;display:inline"> Traducir automáticamente con el servidor (máx 4 000 caracteres)</label></div></div>
+<div class="c"><h2 style="display:flex;align-items:center;gap:10px">2 · Traducción al español <button class="b s" id="trs" style="font-size:11px;font-weight:700;padding:4px 12px;margin-left:auto">🌐 Servidor (Google)</button></h2><div id="tr" class="mu">Sin entrada.</div><div id="meta" class="mu" aria-live="polite" style="margin-top:8px"></div><div class="cm" aria-hidden="true"><i id="cmf"></i></div><label style="margin-top:6px"><input type="checkbox" id="tauto" style="width:auto;display:inline"> Traducir automáticamente con el servidor (máx 4 000 caracteres)</label></div></div>
 <div class="c"><h2>3 · Análisis (léxico → sintáctico → semántico)</h2><div class="g"><div><b>Tabla de símbolos</b><div class="w" id="sym"></div></div><div><b>Errores semánticos señalados</b><div id="errs"></div><div id="rec" style="margin-top:10px"></div></div></div>
 <button class="b gn" id="gen">Generar reporte automático</button></div></section>
 
 <section class="p" id="p-rep"><div class="c no-print"><label>Reporte</label><select id="rs"></select></div><div id="rv"><div class="c mu">Aún no hay reportes. Genera uno desde «Llamada en vivo».</div></div></section>
 
-<section class="p" id="p-uni"><div class="c"><h2>Asignación de unidades</h2><svg id="map" viewBox="0 0 400 300" style="width:100%;max-width:640px;background:var(--bg);border:1px solid var(--bd);border-radius:8px"></svg>
+<section class="p" id="p-uni"><div class="c"><h2>Asignación de unidades</h2><svg id="map" viewBox="0 0 400 300" role="img" aria-label="Mapa de asignación de unidades" style="width:100%;max-width:640px;background:var(--bg);border:1px solid var(--bd);border-radius:8px"></svg>
 <div class="mu">● Ambulancia (verde) ● Patrulla (gris) ● Bomberos (naranja) ✖ Incidente</div><div class="w" id="ul"></div></div></section>
 
 <section class="p" id="p-aud"><div class="c"><h2>Trazabilidad (cadena de hashes encadenados)</h2><button class="b" id="vf">Verificar integridad</button><span id="vr"></span><div class="w" id="al"></div></div></section>
@@ -121,9 +140,11 @@ div.sim::after{content:'';position:absolute;inset:0;border-radius:8px;pointer-ev
 <p class="mu">Alineación de diseño y proceso con estas normas; no constituye certificación ni evaluación formal CMMI, que requieren auditor externo.</p></div></section>
 </main>
 <div id="toasts" aria-live="polite"></div>
+<dialog id="dlg" class="dlg"><h3 id="dlgt"></h3><p id="dlgp" class="mu"></p><form method="dialog"><button value="ok" class="b">Confirmar</button><button value="x" class="b s">Cancelar</button></form></dialog>
 <script>
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),csrf=()=>(document.cookie.match(/csrftoken=([^;]+)/)||[])[1]||'';
 const toast=(m,k)=>{const t=document.createElement('div');t.className='toast '+(k||'');t.textContent=m;$('#toasts').appendChild(t);requestAnimationFrame(()=>t.classList.add('on'));setTimeout(()=>{t.classList.remove('on');setTimeout(()=>t.remove(),300)},k==='err'?6500:3800)};
+const ask=(t,m,fn)=>{const d=$('#dlg');if(!d.showModal){if(confirm(m))fn();return}$('#dlgt').textContent=t;$('#dlgp').textContent=m;d.returnValue='';d.onclose=()=>{d.returnValue==='ok'&&fn()};d.showModal();d.onclick=e=>{if(e.target===d)d.close('x')}};
 const LS='drivetec_v1',U0=()=>[["A-12","Ambulancia",190,100],["A-07","Ambulancia",320,200],["P-07","Patrulla",230,170],["P-03","Patrulla",70,200],["B-03","Bomberos",260,60],["B-01","Bomberos",150,250]].map(([id,t,x,y])=>({id,t,x,y,busy:false}));
 let S={reports:[],seq:2041,log:[],units:U0(),sel:0};
 try{const r=localStorage.getItem(LS);if(r)S=JSON.parse(r)}catch(e){}
@@ -170,17 +191,19 @@ const ico=k=>`<svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke
 const TI={dash:'dash',live:'mic',rep:'doc',uni:'pin',aud:'shield',qa:'check'};
 $('#nav').innerHTML=`<div class='brand'>◎ drive tec</div>`+TABS.map(([k,v])=>`<button data-k="${k}">${ico(TI[k])}${v}</button>`).join('');
 function tab(k){document.querySelectorAll('.p').forEach(p=>p.classList.toggle('on',p.id==='p-'+k));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.k===k));({dash:rDash,rep:rRep,uni:rUni,aud:rAud,qa:rQA})[k]?.()}
-$('#nav').onclick=e=>e.target.dataset.k&&tab(e.target.dataset.k);
+$('#nav').onclick=e=>{if(e.target.dataset.k){location.hash=e.target.dataset.k;tab(e.target.dataset.k)}};
 const SC=[["Inglés · choque","I need an ambulance, there was a crash near the bridge and two people hurt"],["Español · disnea","Mi padre no puede respirar, estamos en el hospital"],["Portugués · acidente","Preciso de uma ambulância, houve um acidente perto da ponte"],["Francés · incendie","Il y a eu un incendie près du pont, au secours"],["Datos faltantes","help please"]];
 $('#sc').innerHTML=SC.map((s,i)=>`<button class="b s" data-i="${i}">${s[0]}</button>`).join('');
 $('#sc').onclick=e=>{if(e.target.dataset.i){$('#txt').value=SC[e.target.dataset.i][1];run()}};
 let cur=null,t0=null,rec=null,voiceOn=false,vtmr=null,vbuf='',vLast=0,vRep=0;
-function paint(a,v){$('#tr').innerHTML=v?`<b>${esc(a.es)}</b>`:'Sin entrada.';
+const MKT={choque:'choque|accidente|colisi',incendio:'incendio|llamas|humo',robo:'robo|arma|disparo',medico:'ambulancia|respirar|heridos|card'};
+const hlw=(t,ws)=>{let o=t;ws.forEach(w=>{if(w&&w.length>2&&!o.includes('<mark>'))o=o.replace(new RegExp('\\b('+w+')\\b','i'),'<mark>$1</mark>')});return o};
+function paint(a,v){$('#tr').innerHTML=v?`<b>${hlw(esc(a.es),[a.uk,MKT[a.tipo]])}</b>`:'Sin entrada.';
  $('#meta').textContent=v?`Idioma detectado: ${a.lang.toUpperCase()} · confianza ${Math.round(a.conf*100)}% · ${a.tk} tokens · ${a.ms} ms · Motor: ${a.engine==='local'?'glosario':a.engine}`:'';
  const cf=$('#cmf');if(cf){cf.style.width=v?Math.max(4,Math.round(a.conf*100))+'%':'0%';cf.style.background=v&&a.conf<.6?'linear-gradient(90deg,#e11d48,#f97316)':''}
  $('#sym').innerHTML='<table>'+Object.entries(a.sym).map(([k,x])=>`<tr><td><code>${k}</code></td><td>${x==null?'<span class="er">⚠ faltante</span>':esc(x)}</td></tr>`).join('')+'</table>';
  $('#errs').innerHTML=a.errs.length?a.errs.map(e=>`<div class="er">⚠ ${esc(e)}</div>`).join(''):(v?'<div class="ok">✔ Sin errores semánticos</div>':'');
- const r=a.rc;$('#rec').innerHTML=v?`<b>Unidad sugerida:</b> ${r.main?`${r.main.id} (${r.main.t}, ${r.main.km.toFixed(1)} km)`:'— requiere ubicación/tipo'} ${a.prio?`<span class="tag ${a.prio}">${a.prio}</span>`:''}`:''}
+ const r=a.rc;$('#rec').innerHTML=v?`<output for="txt"><b>Unidad sugerida:</b> ${r.main?`${r.main.id} (${r.main.t}, ${r.main.km.toFixed(1)} km)`:'— requiere ubicación/tipo'} ${a.prio?`<span class="tag ${a.prio}">${a.prio}</span>`}</output>`:''}
 function run(){const v=$('#txt').value;if(v&&!t0)t0=Date.now();if(!v)t0=null;cur=analyze(v,S.units);paint(cur,v)}
 let tTr=null;$('#txt').oninput=()=>{run();clearTimeout(tTr);if($('#tauto').checked)tTr=setTimeout(()=>srvTr(true),700)};
 async function srvTr(auto){const v=$('#txt').value;if(!v.trim())return;const b=$('#trs');if(b)b.disabled=true;
@@ -246,7 +269,7 @@ const sumTxt=r=>`${TN[r.tipo]||'Incidente sin clasificar'} ${r.ub?'en '+r.ub:'(u
 function rDash(){const fr=S.units.filter(u=>!u.busy).length,act=S.reports.filter(r=>r.status!=='cerrado').length,tod=S.reports.filter(r=>r.day===new Date().toDateString()).length,rs=S.reports.filter(r=>r.resp!=null),av=rs.length?Math.round(rs.reduce((a,r)=>a+r.resp,0)/rs.length):null;
  $('#kp').innerHTML=[[act,'Llamadas activas','phone','linear-gradient(135deg,#f43f5e,#fb7185)','Casos sin cerrar'],[tod,'Reportes hoy','doc','linear-gradient(135deg,#f59e0b,#fbbf24)','Último folio DT-2026-'+S.seq],[fr+'/'+S.units.length,'Unidades libres','truck','linear-gradient(135deg,#10b981,#34d399)','Disponibles para despacho'],[av==null?'—':Math.floor(av/60)+':'+String(av%60).padStart(2,'0'),'Respuesta promedio','clock','linear-gradient(135deg,#0ea5e9,#6366f1)','mm:ss hasta el despacho']].map(([k,l,i,g,f])=>`<div class='c'><div class='kt'><div><div class='kl'>${l}</div><div class='k'>${k}</div></div><div class='ic' style='background:${g}'>${ico(i)}</div></div><div class='kf'>${f}</div></div>`).join('');dmap();chart();
  $('#dl').innerHTML=S.reports.length?'<table><tr><th>Folio</th><th>Hora</th><th>Incidente</th><th>Prioridad</th><th>Unidad</th><th>Estado</th></tr>'+S.reports.slice(0,8).map((r,i)=>`<tr><td><a href="#" data-i="${i}">${r.folio}</a></td><td>${r.dt}</td><td>${TN[r.tipo]||'—'}</td><td><span class="tag ${r.prio||''}">${r.prio||'—'}</span></td><td>${r.unit||'—'}</td><td><span class="tag ${r.status}">${r.status}</span></td></tr>`).join('')+'</table>':'<span class="mu">Sin reportes todavía.</span>'}
-$('#dl').onclick=e=>{if(e.target.dataset.i!=null){e.preventDefault();S.sel=+e.target.dataset.i;tab('rep')}};
+$('#dl').onclick=e=>{if(e.target.dataset.i!=null){e.preventDefault();S.sel=+e.target.dataset.i;location.hash='rep';tab('rep')}};
 function rRep(){const R=S.reports;$('#rs').innerHTML=R.map((r,i)=>`<option value="${i}" ${i===S.sel?'selected':''}>${r.folio} · ${TN[r.tipo]||'—'}</option>`).join('');if(!R.length)return;const r=R[S.sel]||R[0],ed=r.status==='borrador';
  const opts=(arr,v)=>arr.map(([a,b])=>`<option value="${a}" ${a===v?'selected':''}>${b}</option>`).join('');
  $('#rv').innerHTML=`<div class="c"><h2>Reporte ${r.folio} <span class="tag">${r.status}</span></h2>${stepper(r.status)}
@@ -257,9 +280,9 @@ function rRep(){const R=S.reports;$('#rs').innerHTML=R.map((r,i)=>`<option value
  <label>Prioridad</label><select data-f="prio" ${ed?'':'disabled'}>${opts([['','Sin determinar'],['alta','Alta'],['media','Media'],['baja','Baja']],r.prio||'')}</select>
  <label>Resumen</label><textarea data-f="res" ${ed?'':'disabled'}>${esc(r.res||sumTxt(r))}</textarea>
  <label>Unidad asignada</label><select data-f="unit" ${r.status==='despachado'||r.status==='cerrado'?'disabled':''}>${opts([['','Sin asignar'],...S.units.filter(u=>!u.busy||u.id===r.unit).map(u=>[u.id,u.id+' · '+u.t])],r.unit||'')}</select>
- <label>Transcripción original</label><div class="mu">${esc(r.orig)}</div><label>Traducción</label><div>${esc(r.es)}</div>
+ <details class="dtl"><summary>Transcripción original y traducción (${r.orig.length} caracteres)</summary><label>Transcripción original</label><div class="mu">${esc(r.orig)}</div><label>Traducción</label><div>${esc(r.es)}</div></details>
  ${r.errs.length?'<label>Alertas</label>'+r.errs.map(e=>`<div class="er">⚠ ${esc(e)}</div>`).join(''):''}
- <div class="no-print" style="margin-top:12px">${r.status==='borrador'?'<button class="b gn" data-a="ap">Aprobar</button>':''}${r.status==='aprobado'?'<button class="b" data-a="dp">Despachar unidad</button>':''}${r.status==='despachado'?'<button class="b" data-a="cl">Cerrar y liberar unidad</button>':''}<button class="b s" data-a="pdf">Exportar a PDF</button></div></div>`}
+ <div class="no-print" style="margin-top:12px">${r.status==='borrador'?'<button class="b gn" data-a="ap">Aprobar</button>':''}${r.status==='aprobado'?'<button class="b" data-a="dp">Despachar unidad</button>':''}${r.status==='despachado'?'<button class="b" data-a="cl">Cerrar y liberar unidad</button>':''}<button class="b s" data-a="cp">📋 Copiar</button><button class="b s" data-a="pdf">Exportar a PDF</button></div></div>`}
 $('#rs').onchange=e=>{S.sel=+e.target.value;rRep()};
 $('#rv').onchange=e=>{const r=S.reports[S.sel],f=e.target.dataset.f;if(!f)return;const v=e.target.value;
  if(f==='tipo'||f==='uk'||f==='her'||f==='prio'){r[f]=f==='her'?(v===''?null:+v):(v||null);if(f==='uk')r.ub=r.uk?GZ[r.uk][0]:null;r.res=null;
@@ -267,9 +290,11 @@ $('#rv').onchange=e=>{const r=S.reports[S.sel],f=e.target.dataset.f;if(!f)return
  else if(f==='res')r.res=v;else if(f==='unit')r.unit=v;log(r.folio,'Edición del operador: '+f+'='+v);save();rRep()};
 $('#rv').onclick=e=>{const a=e.target.dataset.a;if(!a)return;const r=S.reports[S.sel];
  if(a==='pdf'){window.print();return}
- if(a==='ap'){r.status='aprobado';log(r.folio,'Reporte aprobado por operador')}
- if(a==='dp'){const u=S.units.find(u=>u.id===r.unit);if(!u){toast('Asigna una unidad primero.','err');return}u.busy=true;r.status='despachado';r.resp=Math.round((Date.now()-r.t0)/1000);log(r.folio,'Despacho de '+u.id+', respuesta '+r.resp+'s')}
- if(a==='cl'){const u=S.units.find(u=>u.id===r.unit);if(u)u.busy=false;r.status='cerrado';log(r.folio,'Incidente cerrado; unidad liberada')}
+ if(a==='ap'){r.status='aprobado';log(r.folio,'Reporte aprobado por operador');save();rRep();return}
+ if(a==='dp'){const u=S.units.find(u=>u.id===r.unit);if(!u){toast('Asigna una unidad primero.','err');return}ask('Despachar unidad','¿Despachar '+u.id+' al incidente '+r.folio+'? La unidad marcará «ocupada» y se medirá el tiempo de respuesta.',()=>{u.busy=true;r.status='despachado';r.resp=Math.round((Date.now()-r.t0)/1000);log(r.folio,'Despacho de '+u.id+', respuesta '+r.resp+'s');save();rRep()});return}
+ if(a==='cl'){ask('Cerrar y liberar','¿Cerrar el incidente '+r.folio+' y liberar la unidad'+(r.unit?' '+r.unit:'')+'?',()=>{const u=S.units.find(u=>u.id===r.unit);if(u)u.busy=false;r.status='cerrado';log(r.folio,'Incidente cerrado; unidad liberada');save();rRep()});return}
+ if(a==='cp'){const txt=[r.folio+' · estado '+r.status,'Resumen: '+(r.res||sumTxt(r)),'Unidad: '+(r.unit||'n/d'),'Prioridad: '+(r.prio||'n/d'),'Heridos: '+(r.her??'n/d'),'Ubicación: '+(r.ub||'n/d')].join('\n');
+  navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(txt).then(()=>toast('Reporte copiado al portapapeles','ok'),()=>toast('No se pudo copiar','err')):toast('Portapapeles no disponible en este navegador','err');return}
  save();rRep()};
 function rUni(){const r=S.reports[S.sel],inc=r&&r.uk?GZ[r.uk]:null,col={Ambulancia:'#10b981',Patrulla:'#64748b',Bomberos:'#f59e0b'};let s='';
  for(const k in GZ)s+=`<rect x="${GZ[k][1]-4}" y="${GZ[k][2]-4}" width="8" height="8" fill="none" stroke="#8aa" /><text x="${GZ[k][1]+7}" y="${GZ[k][2]+3}">${GZ[k][0]}</text>`;
@@ -291,7 +316,7 @@ function chart(){const c=$('#ch');if(!c)return;const pw=c.parentElement||c,w=pw.
   if(x.roundRect)x.roundRect(gx,by,bw,bh,[6,6,0,0]);else x.rect(gx,by,bw,bh);x.fill();
   x.fillStyle=TXc;x.font='700 15px system-ui';x.textAlign='center';if(n)x.fillText(String(n),gx+bw/2,by-6);
   x.fillStyle=MUc;x.font='10px system-ui';const t=(Object.values(TN)[i]||'').split(/[\s/]+/);x.fillText(t[0],gx+bw/2,h-27);if(t[1])x.fillText(t[1],gx+bw/2,h-16)})}  // gráfica nativa: sin CDN, funciona offline
-function rAud(){$('#al').innerHTML=S.log.length?'<table><tr><th>#</th><th>Hora (UTC)</th><th>Folio/Etapa</th><th>Evento</th><th>Hash</th></tr>'+S.log.map((e,i)=>`<tr><td>${i+1}</td><td>${e.t.slice(0,19)}</td><td>${esc(e.st)}</td><td>${esc(e.d)}</td><td><code>${e.h}</code></td></tr>`).join('')+'</table>':'<span class="mu">Sin eventos.</span>'}
+function rAud(){$('#al').innerHTML=S.log.length?'<table><tr><th>#</th><th>Hora (UTC)</th><th>Folio/Etapa</th><th>Evento</th><th>Hash</th></tr>'+S.log.map((e,i)=>`<tr><td>${i+1}</td><td><time datetime="${e.t}">${e.t.slice(0,19)}</time></td><td>${esc(e.st)}</td><td>${esc(e.d)}</td><td><code>${e.h}</code></td></tr>`).join('')+'</table>':'<span class="mu">Sin eventos.</span>'}
 $('#vf').onclick=()=>{$('#vr').innerHTML=chainOK(S.log)?' <b class="ok">✔ Cadena íntegra ('+S.log.length+' eventos)</b>':' <b class="er">✖ Se detectó alteración</b>'};
 // ---- Calidad ----
 const TS=[["PR-01 Inglés: choque con 2 heridos",()=>{const a=analyze(SC[0][1],U0());return a.tipo==='choque'&&a.uk==='puente'&&a.her===2&&a.prio==='alta'&&a.lang==='en'}],
@@ -310,5 +335,18 @@ $('#rq').innerHTML='<table><tr><th>ID</th><th>Requisito</th><th>Módulo</th><th>
 const NM=[["ISO/IEC/IEEE 12207","Ciclo de vida del software","Requisitos → diseño → construcción → verificación con evidencia trazable en esta pestaña"],["ISO/IEC/IEEE 29148 (sucesor de IEEE 830)","Ingeniería de requisitos","Requisitos con ID, verificables y ligados a pruebas"],["IEEE 1016","Descripción del diseño","Arquitectura de 4 módulos y pipeline de 5 etapas como compilador (léxico, sintáctico, semántico, destino)"],["ISO/IEC 25010","Calidad del producto","Adecuación funcional, eficiencia (ms medidos), usabilidad («humano al centro»), fiabilidad (edición manual ante fallos), seguridad (auditoría), mantenibilidad (glosarios modulares)"],["ISO/IEC 29119 · IEEE 829","Pruebas de software","10 casos automáticos con resultado aprobado/falló"],["ISO/IEC 27001 · 27701","Seguridad y privacidad","Minimización: datos solo en el navegador, sin envío a servidores; integridad con hashes encadenados. Pendiente en producción: cifrado en reposo y control de acceso por rol"],["ISO 22320","Gestión de emergencias","Flujo de alerta, priorización y asignación de recursos con validación humana"],["IEEE 828 · CMMI CM","Gestión de configuración","Folios únicos, historial de cambios del operador en la bitácora"],["CMMI RD / TS","Desarrollo de requisitos y solución técnica","Matriz de requisitos y diseño documentado"],["CMMI VER / VAL","Verificación y validación","Pruebas automáticas y validación por el operador (aprobar/editar)"],["CMMI PPQA","Aseguramiento de calidad","Alertas de baja confianza y datos faltantes antes de aprobar"]];
 const rQA=()=>{$('#nm').innerHTML='<table><tr><th>Norma</th><th>Alcance</th><th>Cómo se atiende</th></tr>'+NM.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('')+'</table>'};
 if(!matchMedia('(prefers-reduced-motion:reduce)').matches)document.querySelectorAll('[data-tilt]').forEach(t=>{t.addEventListener('mousemove',e=>{const r=t.getBoundingClientRect();t.style.transform=`perspective(900px) rotateX(${((.5-(e.clientY-r.top)/r.height)*4).toFixed(2)}deg) rotateY(${(((e.clientX-r.left)/r.width-.5)*4).toFixed(2)}deg)`});t.addEventListener('mouseleave',()=>t.style.transform='')});
-rQA();run();rDash();tab('dash');
+// ---- Tema (Figma 2026 · modo oscuro): auto / claro / oscuro, guardado en localStorage ----
+const TM=['auto','light','dark'],TL={auto:'◐ Auto',light:'☀ Claro',dark:'☾ Oscuro'},TK='drivetec_theme',tget=()=>{try{const v=localStorage.getItem(TK);return TM.includes(v)?v:'auto'}catch(e){return'auto'}};
+function tapply(m,loud){const d=document.documentElement,dk=m==='dark'||(m==='auto'&&matchMedia('(prefers-color-scheme:dark)').matches);m==='auto'?d.removeAttribute('data-theme'):d.dataset.theme=m;
+ document.querySelectorAll('meta[name=theme-color]').forEach(x=>{x.dataset.o=x.dataset.o||x.content;x.content=m==='auto'?x.dataset.o:(dk?'#0a1120':'#f4f6fb')});
+ const b=$('#tg');if(b){b.textContent=TL[m];b.setAttribute('aria-label','Tema de color: '+TL[m].slice(2)+'. Pulsa para cambiar.');b.title='Tema: '+TL[m].slice(2)}
+ if(!loud)return;if(!matchMedia('(prefers-reduced-motion:reduce)').matches){d.classList.add('tt');setTimeout(()=>d.classList.remove('tt'),350)}
+ const k=$('nav button.on')?.dataset.k;if(k==='dash'||k==='uni'||k==='rep')tab(k);toast('Tema '+TL[m].slice(2).toLowerCase()+' activado','ok')}
+$('#tg').onclick=()=>{const n=TM[(TM.indexOf(tget())+1)%3];try{localStorage.setItem(TK,n)}catch(e){}tapply(n,true)};
+matchMedia('(prefers-color-scheme:dark)').addEventListener?.('change',()=>{if(tget()==='auto')tapply('auto',true)});
+tapply(tget(),false);
+rQA();run();rDash();
+const ik=TABS.some(([x])=>x===location.hash.slice(1))?location.hash.slice(1):'dash';tab(ik);   // HTML5: deep-link por hash + botón atrás
+addEventListener('hashchange',()=>{const k=location.hash.slice(1);TABS.some(([x])=>x===k)&&tab(k)});
+document.addEventListener('keydown',e=>{const m={Digit1:0,Digit2:1,Digit3:2,Digit4:3,Digit5:4,Digit6:5},i=m[e.code];if(e.altKey&&i!=null&&!e.ctrlKey&&!e.metaKey){e.preventDefault();location.hash=TABS[i][0];tab(TABS[i][0])}});
 </script><script src='/config.js'></script><script src='/static/simmap.js'></script><script src='/static/maps.js'></script></body></html>

@@ -1,119 +1,132 @@
 <div align="center">
 
-# 🚨 Drive Tec
+# Drive Tec
 
-### Transcripción, traducción y gestión inteligente de llamadas de emergencia
+### Sistema de transcripción, traducción y gestión inteligente de llamadas de emergencia
 
-*Escuchar una llamada en inglés… traducirla al español con confianza… extraer el incidente
-y sugerir la unidad más cercana — **siempre con el operador al centro de la decisión**.*
+Drive Tec recibe una llamada de emergencia multilingüe, la transcribe, detecta el idioma, la traduce
+al español, extrae los datos críticos del incidente y **sugiere** la unidad de respuesta más cercana.
+La decisión final corresponde siempre al operador.
 
-[![License: MIT](https://img.shields.io/badge/Licencia-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![Django](https://img.shields.io/badge/Django-5.2-092E20?logo=django&logoColor=white)](https://www.djangoproject.com/)
-[![ASR](https://img.shields.io/badge/Whisper-faster--whisper%20local-FF6F00)](https://github.com/SYSTRAN/faster-whisper)
-[![Backend tests](https://img.shields.io/badge/Backend-23%20pruebas-success)](#-pruebas)
-[![Dependencias runtime](https://img.shields.io/badge/Deps%20runtime-0%20externas-informational)](#-funcionalidades)
-[![Mapa](https://img.shields.io/badge/Mapa-Tijuana%20real%20(GeoJSON)-2E7DD1)](tijuana-districts.json)
-[![Frontend](https://img.shields.io/badge/Frontend-1%20solo%20HTML%20·%20HTML5%20sem%C3%A1ntico-8A2BE2)](core/app/index.html)
+[![Licencia MIT](https://img.shields.io/badge/Licencia-MIT-blue.svg)](LICENSE)
+[![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Django 5.2](https://img.shields.io/badge/Django-5.2-092E20?logo=django&logoColor=white)](https://www.djangoproject.com/)
+[![faster-whisper local](https://img.shields.io/badge/ASR-faster--whisper--local-FF6F00)](https://github.com/SYSTRAN/faster-whisper)
+[![23 pruebas de backend](https://img.shields.io/badge/Backend-23_pruebas-success)](#verificación-y-pruebas)
+[![0 dependencias de runtime](https://img.shields.io/badge/Deps_runtime-0_externas-informational)](#funcionalidades)
+[![Mapa con GeoJSON real de Tijuana](https://img.shields.io/badge/Mapa-Tijuana_GeoJSON-2E7DD1)](tijuana-districts.json)
+[![Frontend en un solo archivo HTML5](https://img.shields.io/badge/Frontend-un_solo_archivo-8A2BE2)](core/app/index.html)
 
 **Instituto Tecnológico de Tijuana** · Ingeniería en Sistemas Computacionales · Lenguajes y Autómatas II · 2026
 
 </div>
 
-> [!TIP]
-> **Modo «elevador» (30 s):** pestaña *Llamada en vivo* → escenario *«Inglés · choque»* → traducción al español con % de confianza → tabla de símbolos detecta `choque vehicular · 2 heridos · prioridad alta` → el sistema sugiere la ambulancia **A-12** (la más cercana) → el operador aprueba y despacha → cada paso queda en una bitácora **verificable con hashes encadenados**.
+> [!NOTE]
+> Diseño de operación: **el sistema recomienda; el operador decide**. Los datos no identificados
+> se señalan de forma explícita en la interfaz y en la auditoría; el sistema nunca los asume ni
+> ejecuta acciones sensibles sin confirmación.
 
 ---
 
-## 🎬 El recorrido completo
+## Resumen
+
+Drive Tec es una aplicación web Django orientada a la operación de despachos de emergencia. Utiliza
+el paralelo entre un compilador y una llamada real: el audio o texto se somete a una **canalización
+de cinco etapas** (análisis léxico, detección de idioma, traducción, análisis semántico y decisión
+de recursos) que produce un reporte estructurado y auditable. La transcripción de voz puede
+realizarse de dos formas: en el navegador (Web Speech API) o en el servidor con *faster-whisper*
+local, de modo que el audio no abandona el servidor. Cada paso queda registrado en una bitácora con
+**cadenas de hashes encadenadas** (FNV-1a en el cliente y SHA-256 en el servidor) verificables.
+
+El sistema funciona **sin dependencias externas de runtime**: sin claves ni conexión, el modo
+simulado emplea glosarios deterministas y un mapa con los distritos reales de Tijuana (GeoJSON).
+
+---
+
+## Arquitectura del flujo de atención
 
 ```mermaid
 flowchart LR
-    A["🎤 Captura<br>micrófono · Whisper · texto"] --> B["⚙️ Pipeline de análisis<br>tokens → idioma → traducción → semántica"]
-    B --> C["📄 Reporte<br>DT-2026-XXXX"]
-    B --> D["🚑 Sugerencia<br>unidad más cercana"]
-    D --> O["👤 Operador<br>revisa y decide"]
-    C --> O
-    O --> E["🔒 Auditoría<br>FNV-1a (client) + SHA-256 (server)"]
+    A["Captura de la llamada<br>micrófono, Whisper local o texto"] --> B["Pipeline de análisis<br>tokens, idioma, traducción, semántica"]
+    B --> C["Reporte estructurado<br>folio DT-2026-XXXX"]
+    B --> D["Sugerencia de unidad<br>más cercana por tipo y distancia"]
+    C --> O["Operador<br>revisa, aprueba y despacha"]
+    D --> O
+    O --> E["Auditoría<br>FNV-1a cliente y SHA-256 servidor"]
 ```
 
-Cada reporte avanza por un ciclo de vida explícito — y ninguna unidad se despacha con un clic accidental:
+## Ciclo de vida del reporte
 
 ```mermaid
 stateDiagram-v2
     [*] --> borrador : Generar reporte automático
-    borrador --> aprobado : ✅ Aprobar
-    aprobado --> despachado : 🚑 Despachar unidad `<dialog>` nativo
-    despachado --> cerrado : 🔓 Cerrar y liberar
+    borrador --> aprobado : Aprobar
+    aprobado --> despachado : Confirmar despacho
+    despachado --> cerrado : Cerrar y liberar unidad
     cerrado --> [*]
-    nota right of aprobado
-        Los campos solo son editables en «borrador»:
-        «El sistema recomienda; el operador decide»
+    note right of aprobado
+        La edición de campos solo es posible en borrador.
+        El despacho y el cierre se confirman con dialogo nativo.
     end note
 ```
 
 ---
 
-## ✨ Funcionalidades
+## Funcionalidades
 
-| Módulo | Qué hace |
+| Módulo | Descripción |
 |---|---|
-| 🖥️ **Centro de mando** | KPIs (llamadas activas, unidades libres, respuesta promedio), mapa operativo y gráfica por tipo de incidente — canvas 2D nativo, sin CDN |
-| 🎙️ **Llamada en vivo** | Micrófono (Web Speech), grabación → **Whisper local**, o texto; traducción EN/PT/FR→ES; tabla de símbolos semánticos y errores **señalados, nunca asumidos** |
-| 📄 **Reporte** | Folio `DT-2026-NNNN`, edición controlada, flujo borrador → aprobado → despachado → cerrado, exportación a PDF |
-| 🚑 **Unidades** | Mapa con **distritos reales de Tijuana**, geocodificación, ETA por unidad, asignación y animación de despacho |
-| 🔒 **Auditoría** | Doble cadena de hashes (FNV-1a cliente + SHA-256 servidor), verificable con un clic |
-| ✅ **Calidad y normas** | 10 pruebas automáticas, matriz RF/RNF y alineación ISO/IEEE/CMMI (dinámica; no es certificación) |
+| **Centro de mando** | Indicadores de llamadas activas, unidades libres y tiempo promedio de respuesta; mapa operativo y gráfica por tipo de incidente (canvas 2D nativo, sin CDN) |
+| **Llamada en vivo** | Captura por micrófono (Web Speech), grabación con transcripción local (faster-whisper) o texto manual; traducción EN/PT/FR hacia ES; tabla de símbolos semánticos |
+| **Reporte** | Folio `DT-2026-NNNN`; edición controlada por estados; exportación a PDF mediante estilos de impresión |
+| **Unidades** | Mapa con distritos reales de Tijuana, geocodificación de dirección, tiempo estimado de llegada por unidad, asignación y liberación |
+| **Auditoría** | Doble cadena de hashes encadenados (cliente y servidor) con verificación en un clic |
+| **Calidad y normas** | Diez pruebas automáticas en la aplicación, matriz de requisitos RF/RNF y matriz de alineación normativa ISO/IEEE/CMMI (dinámica; no constituye certificación) |
 
 ---
 
-## 🧠 Cómo funciona (pipeline tipo compilador)
+## Fundamento teórico: pipeline tipo compilador
 
-Del marco teórico de **Aho, Lam, Sethi y Ullman** aplicado a una llamada real de 911:
+La arquitectura sigue el modelo de compiladores de Aho, Lam, Sethi y Ullman — marco teórico de la
+materia Lenguajes y Autómatas II — aplicado a una llamada real:
 
-| Etapa | En la app | Concepto de la materia |
+| Etapa del pipeline | Implementación en la aplicación | Concepto correspondiente en compiladores |
 |---|---|---|
-| Léxico | Tokenización y normalización | Analizador léxico (expresiones regulares) |
-| Sintáctico | Detección de idioma por marcadores | Gramáticas y lenguajes regulares |
-| Semántico | Traducción + extracción *tipo/heridos/ubicación/prioridad* | Análisis dirigido por sintaxis |
-| Destino | Tabla de símbolos + errores semánticos | Tabla de símbolos y manejo de errores |
-| Decisión | Sugerencia de unidad + **señalar faltantes sin asumirlos** | Generación de código dirigida |
+| 1. Análisis léxico | Normalización y tokenización del texto | Analizador léxico con expresiones regulares |
+| 2. Detección de idioma | Marcadores de EN/PT/FR/ES con conteo de coincidencias | Clasificación sobre lenguajes regulares |
+| 3. Traducción | Glosarios deterministas o servicio externo opcional | Análisis sintáctico dirigido |
+| 4. Análisis semántico | Extracción de tipo, heridos, ubicación y prioridad en una tabla de símbolos | Tabla de símbolos y verificación semántica |
+| 5. Generación de decisión | Sugerencia de unidad y señalización de datos faltantes | Generación de código intermedio |
 
-```text
-audio → tokens acústicos → estructura semántica → texto destino → decisión de recursos
+```
+audio -> tokens acústicos -> estructura semántica -> texto destino -> decisión de recursos
 ```
 
 ---
 
-## 🚀 Inicio rápido
-
-<div align="center">
-
-### `.\start.bat` y listo — modo simulado, **costo cero** y sin internet
-
-</div>
+## Inicio rápido
 
 <details open>
-<summary><b>🪟 Windows (clase)</b></summary>
+<summary><b>Windows (PowerShell) — flujo de clase</b></summary>
 
 ```powershell
 git clone https://github.com/VictorMBojorquez/drivetec.git
 cd drivetec
 python -m pip install -r requirements.txt
-.\crear-admin.bat      # una sola vez: crea el superusuario
-.\start.bat            # abre el navegador y arranca
+.\crear-admin.bat      # se ejecuta una sola vez: crea el superusuario
+.\start.bat            # inicia el servidor y abre el navegador
 ```
 
-Capacidades en servidor (opcional):
+Capacidades en servidor (opcionales):
 
 ```powershell
-.\start.ps1 -WhisperModel base                                  # transcripción IA local (~75 MB al primer uso)
-.\start.ps1 -WhisperModel base -GoogleServerKey "AIza…"         # + traducción/geocodificación Google
+.\start.ps1 -WhisperModel base                          # transcripción local (~75 MB en el primer uso)
+.\start.ps1 -WhisperModel base -GoogleServerKey "AIza…" # + traducción y geocodificación de Google
 ```
 </details>
 
 <details>
-<summary><b>🐧 Linux / macOS</b></summary>
+<summary><b>Linux / macOS</b></summary>
 
 ```bash
 python -m pip install -r requirements.txt
@@ -123,37 +136,61 @@ DEBUG=1 python manage.py runserver
 </details>
 
 <details>
-<summary><b>🐳 Producción (VPS · Docker)</b></summary>
+<summary><b>Despliegue en producción (Docker)</b></summary>
 
 ```bash
-cp .env.example .env            # edita los valores
+cp .env.example .env    # editar los valores
 docker compose up -d --build
 docker compose exec web python manage.py createsuperuser
 ```
 
-Proxy HTTPS (Caddy/Nginx) hacia el puerto `8000` con `HTTPS=1`. Salud: `GET /healthz` o `/health`.
+Coloque un proxy HTTPS (Caddy o Nginx) hacia el puerto `8000` y defina `HTTPS=1`.
+Comprobación de salud: `GET /healthz` o `/health`.
 </details>
 
-Abre `http://127.0.0.1:8000/` e inicia sesión.
+La aplicación queda disponible en `http://127.0.0.1:8000/` tras iniciar sesión.
 
 ---
 
-## 🌐 API (sesión requerida · escrituras solo para staff/*Operador*)
+## Estructura del repositorio
+
+```text
+dt/
+├── drivetec/                  # configuración, rutas y WSGI
+├── core/
+│   ├── models.py              # Unit, Report, AuditEvent
+│   ├── views.py               # estado, geocodificación, ETA, Whisper, traducción, auditoría
+│   ├── tests.py               # 23 pruebas de backend
+│   ├── app/index.html         # frontend completo en un solo archivo (HTML5 semántico)
+│   └── static/                # maps.js y simmap.js (mapa canvas con distritos reales)
+├── tijuana-districts.json     # distritos de Tijuana (GeoJSON): referencia cartográfica
+├── tools/mkdist.js            # regenera la capa de distritos (node tools/mkdist.js --write)
+├── start.bat, start.ps1, crear-admin.bat
+├── Dockerfile, docker-compose.yml
+├── DriveTec_Documentacion.md  # documento académico formal del proyecto
+└── LICENSE                    # licencia MIT
+```
+
+---
+
+## Interfaz de programación (API)
 
 <details>
-<summary><b>Ver endpoints, límites de tasa y protecciones</b></summary>
+<summary><b>Endpoints, límites de tasa y protecciones</b></summary>
 
 | Ruta | Método | Función |
 |---|---|---|
-| `/api/state` | GET / PUT | Unidades, reportes y bitácora (persistencia en BD) |
-| `/api/geocode` | POST | Dirección → coordenadas (Google Geocoding) |
-| `/api/rank` | POST | ETA por unidad con tráfico (Google Routes; estimación si falla) |
-| `/api/transcribe` | POST | Audio → texto con **faster-whisper local** (`WHISPER_MODEL`) |
-| `/api/translate` | POST | Texto → español (Cloud Translation API; sin clave usa el glosario) |
-| `/api/audit/verify` | GET | Verifica la doble cadena de hashes |
-| `/healthz` · `/health` | GET | Comprobación de salud |
+| `/api/state` | GET / PUT | Unidades, reportes y bitácora con persistencia en base de datos |
+| `/api/geocode` | POST | Dirección a coordenadas (Google Geocoding) |
+| `/api/rank` | POST | Tiempo estimado de llegada por unidad (Google Routes; estimación si no hay clave) |
+| `/api/transcribe` | POST | Audio a texto con faster-whisper local (requiere `WHISPER_MODEL`) |
+| `/api/translate` | POST | Texto a español (Cloud Translation API; sin clave usa el glosario local) |
+| `/api/audit/verify` | GET | Verificación de la doble cadena de hashes |
+| `/healthz`, `/health` | GET | Comprobación de salud |
 
-**Protecciones integradas:** sesión + CSRF · roles · límites de tasa por usuario (transcripción 10/min · traducción 30/min · geocodificación 20/min · ETA 60/min · estado 120/min) · validación estricta (`400`/`403`/`429`, **nunca `500`**).
+Protecciones integradas: sesión con CSRF; roles de acceso; límites de tasa por usuario
+(transcripción 10/min, traducción 30/min, geocodificación 20/min, ETA 60/min, estado 120/min);
+validación estricta de entradas con respuestas `400`, `403` o `429` y nunca `500`.
 
 </details>
 
@@ -163,69 +200,49 @@ Abre `http://127.0.0.1:8000/` e inicia sesión.
 | Variable | Uso |
 |---|---|
 | `SECRET_KEY` | Clave secreta de Django (**obligatoria** sin `DEBUG`) |
-| `DB_PASSWORD` / `DATABASE_URL` | PostgreSQL en despliegue (SQLite por defecto en dev) |
-| `ALLOWED_HOSTS` · `CSRF_TRUSTED_ORIGINS` | Dominios permitidos |
-| `HTTPS` | `1` → cookies seguras, redirección SSL y HSTS |
-| `DEBUG` | `1` solo en desarrollo |
-| `GOOGLE_MAPS_KEY` | Clave de navegador (vacía = mapa simulado) |
+| `DB_PASSWORD` / `DATABASE_URL` | PostgreSQL en despliegue; SQLite por defecto en desarrollo |
+| `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS` | Dominios permitidos |
+| `HTTPS` | `1` activa cookies seguras, redirección SSL y HSTS |
+| `DEBUG` | `1` únicamente en desarrollo |
+| `GOOGLE_MAPS_KEY` | Clave de navegador (vacía activa el mapa simulado) |
 | `GOOGLE_SERVER_KEY` | Clave de servidor para Geocoding, Routes y Translation |
-| `WHISPER_MODEL` | `tiny`, `base`, `small`… (vacío = solo micrófono del navegador) |
-| `WHISPER_DEVICE` · `WHISPER_COMPUTE` | `cpu`/`cuda` · `int8`/`float16` |
+| `WHISPER_MODEL` | `tiny`, `base`, `small`; vacío usa el micrófono del navegador |
+| `WHISPER_DEVICE`, `WHISPER_COMPUTE` | `cpu`/`cuda` y `int8`/`float16` |
 
 </details>
 
 ---
 
-## 🏗️ Estructura del repositorio
-
-```text
-dt/
-├── drivetec/                 # settings, urls, wsgi
-├── core/
-│   ├── models.py             # Unit · Report · AuditEvent
-│   ├── views.py              # estado, geocodificación, ETA, Whisper, traducción, auditoría
-│   ├── tests.py              # 23 pruebas de backend
-│   ├── app/index.html        # 🎨 frontend completo (CSS, JS, HTML5 semántico)
-│   └── static/               # maps.js · simmap.js (mapa canvas + distritos reales)
-├── tijuana-districts.json    # 🗺️ distritos de Tijuana (GeoJSON) — referencia del mapa
-├── tools/mkdist.js           # regenera la capa de distritos (node tools/mkdist.js --write)
-├── start.bat · start.ps1 · crear-admin.bat
-├── Dockerfile · docker-compose.yml   # despliegue con healthchecks
-├── DriveTec_Documentacion.md # 📚 documento académico completo del proyecto
-└── LICENSE                   # MIT
-```
-
----
-
-## ✅ Pruebas
-
-```bash
-python manage.py test      # 23 pruebas de backend: auth, roles, validación, auditoría, ranking
-```
-
-En la app, pestaña **Calidad y normas**: 10 casos `PR-01…PR-10` (multilingüe, datos faltantes,
-unidad ocupada, latencia < 50 ms, detección de alteración en la cadena…).
-
----
-
-## 🔐 Seguridad y privacidad
+## Seguridad y privacidad
 
 - Acceso con sesión y CSRF; la API responde `401` sin autenticación y `403` sin rol.
-- La clave de Maps *de navegador* se restringe por HTTP referrer; la *de servidor* nunca llega al cliente.
-- **Whisper local**: el audio se transcribe en tu servidor y no sale de él.
-- Con Google activo, direcciones y texto viajan a sus APIs (la UI lo avisa).
-- Minimización de datos, folios únicos e integridad verificable por doble cadena de hashes.
+- La clave de Maps del navegador se restringe por HTTP referrer; la clave de servidor nunca llega al cliente.
+- Whisper local: el audio se transcribe en el propio servidor y no sale de él.
+- Con los servicios de Google activos, direcciones y texto viajan a sus APIs (la interfaz lo informa).
+- Minimización de datos: folios únicos y trazabilidad verificable mediante cadenas de hashes.
 
 ---
 
-## 🧭 Hoja de ruta
+## Verificación y pruebas
 
-- [x] Pipeline multilingüe EN/PT/FR → ES con confianza medida
-- [x] Mapa simulado con **distritos reales de Tijuana** (GeoJSON propio)
-- [x] Doble auditoría verificable cliente + servidor
-- [x] Frontend de un solo archivo con HTML5 semántico (`<dialog>`, `<details>`, `<mark>`, `<time>`)
-- [ ] GPS en vivo y seguimiento de unidades en tiempo real
-- [ ] Roles granulares (supervisor / operador)
+```bash
+python manage.py test      # 23 pruebas de backend: autenticación, roles, validación, auditoría y ranking
+```
+
+En la aplicación, pestaña **Calidad y normas**: diez casos de prueba numerados `PR-01` a `PR-10`
+(casos multilingües, señalización de datos faltantes, exclusión de unidades ocupadas, latencia de
+análisis menor a 50 ms y detección de alteración de la cadena de auditoría).
+
+---
+
+## Hoja de ruta
+
+- [x] Pipeline multilingüe EN/PT/FR a ES con confianza medida
+- [x] Mapa simulado con los distritos reales de Tijuana (GeoJSON propio)
+- [x] Doble auditoría verificable en cliente y servidor
+- [x] Frontend de un solo archivo con HTML5 semántico (`dialog`, `details`, `mark`, `time`)
+- [ ] Posición GPS en vivo y seguimiento de unidades en tiempo real
+- [ ] Roles granulares de supervisor y operador
 - [ ] Cifrado en reposo y respaldos programados
 - [ ] Pruebas de carga y observabilidad
 
@@ -233,14 +250,14 @@ unidad ocupada, latencia < 50 ms, detección de alteración en la cadena…).
 
 <div align="center">
 
-### 👥 Equipo
+## Créditos
 
 **Ballesteros Cruz Aldo Juvetino** · **Bojorquez Valdez Victor Manuel** · **Grande Ortega Maximiliano Alberto**
 
 Instituto Tecnológico de Tijuana · Ingeniería en Sistemas Computacionales · Lenguajes y Autómatas II
 
-📚 Documentación formal del proyecto: [`DriveTec_Documentacion.md`](DriveTec_Documentacion.md) · 📄 Licencia: [MIT](LICENSE)
+Documentación formal del proyecto: [`DriveTec_Documentacion.md`](DriveTec_Documentacion.md) · Licencia: [MIT](LICENSE)
 
-> *Escuchar mejor para responder más rápido.*
+*Escuchar mejor para responder más rápido.*
 
 </div>

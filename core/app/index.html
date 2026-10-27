@@ -100,6 +100,12 @@ details.dtl[open] summary{margin-bottom:6px}
 .dlg h3{margin:0 0 6px;font-size:16.5px}.dlg p{margin:0}
 .dlg form{display:flex;gap:8px;margin-top:16px}
 .dlg::backdrop{background:rgba(11,21,38,.5);backdrop-filter:blur(3px)}
+/* ── 10 · Pipeline: fichas de tokens por etapa (léxico → sintáctico → semántico) ── */
+code.tkc{font:600 11.5px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--sf2);border:1px solid var(--bd);border-radius:7px;padding:2px 8px;display:inline-block;margin:3px 3px 0 0;vertical-align:top}
+code.tkc i{font-style:normal;font-weight:500;color:var(--mu)}
+code.tkc.un{color:#e11d48;border-color:rgba(225,29,72,.45);background:rgba(225,29,72,.06)}
+code.tkc.nu{color:#6366f1;border-color:rgba(99,102,241,.4)}
+code.tkc.sm{color:#0d9488;border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.07)}
 /* ── 9 · Tendencia 2026 (Figma): modo oscuro — selector Auto/Claro/Oscuro, persistente y sin parpadeo ── */
 :root[data-theme="light"]{color-scheme:light}:root[data-theme="dark"]{color-scheme:dark}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) header{background:linear-gradient(120deg,#1e1b4b 0,#312e81 55%,#4c1d95 100%)}:root:not([data-theme="light"]) ::selection{background:rgba(129,140,248,.4)}}
@@ -124,7 +130,8 @@ html.tt,html.tt *{transition:background-color .3s,color .3s,border-color .3s,box
 <label>Transcripción (también puedes escribir o pegar)</label><textarea id="txt" placeholder="I need an ambulance, there was a crash near the bridge and two people hurt"></textarea>
 <label>Escenarios de prueba</label><div id="sc"></div></div>
 <div class="c"><h2 style="display:flex;align-items:center;gap:10px">2 · Traducción al español <button class="b s" id="trs" style="font-size:11px;font-weight:700;padding:4px 12px;margin-left:auto">🌐 Servidor (Google)</button></h2><div id="tr" class="mu">Sin entrada.</div><div id="meta" class="mu" aria-live="polite" style="margin-top:8px"></div><div class="cm" aria-hidden="true"><i id="cmf"></i></div><label style="margin-top:6px"><input type="checkbox" id="tauto" style="width:auto;display:inline"> Traducir automáticamente con el servidor (máx 4 000 caracteres)</label></div></div>
-<div class="c"><h2>3 · Análisis (léxico → sintáctico → semántico)</h2><div class="g"><div><b>Tabla de símbolos</b><div class="w" id="sym"></div></div><div><b>Errores semánticos señalados</b><div id="errs"></div><div id="rec" style="margin-top:10px"></div></div></div>
+<div class="c"><h2>3 · Análisis (léxico → sintáctico → semántico)</h2><div class="g"><div><b>1 · Léxico — tokens producidos</b><div class="w" id="lx"></div><div class="mu" id="lxi" style="margin-top:6px"></div></div><div><b>2 · Sintáctico — constituyentes y regla usada</b><div class="w" id="sx"></div><div class="mu" id="sxi" style="margin-top:6px"></div></div><div><b>3 · Semántico — atributos vinculados</b><div class="w" id="sm"></div><div class="mu" id="smi" style="margin-top:6px"></div></div></div>
+<div class="g" style="margin-top:10px"><div><b>Tabla de símbolos</b><div class="w" id="sym"></div></div><div><b>Errores semánticos señalados</b><div id="errs"></div><div id="rec" style="margin-top:10px"></div></div></div>
 <button class="b gn" id="gen">Generar reporte automático</button></div></section>
 
 <section class="p" id="p-rep"><div class="c no-print"><label>Reporte</label><select id="rs"></select></div><div id="rv"><div class="c mu">Aún no hay reportes. Genera uno desde «Llamada en vivo».</div></div></section>
@@ -162,16 +169,16 @@ const GZ={puente:["Puente Central",210,120],hospital:["Hospital General",300,80]
 const NUM={un:1,uno:1,una:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6};
 const tok=t=>t.toLowerCase().replace(/[’]/g,"'").replace(/[^a-záéíóúñüàâçèêëîïôùûãõ0-9' ]+/g,' ').split(/\s+/).filter(Boolean);
 function detect(tk){const sc={};for(const l in M){const w=M[l].split(' ');sc[l]=tk.filter(t=>w.includes(t)).length}let b='es',m=0;for(const l in sc)if(sc[l]>m){m=sc[l];b=l}return b}
-function translate(tk,lang){if(lang==='es')return{es:tk.join(' '),conf:1,unk:[]};
- const order=[lang,...Object.keys(D).filter(x=>x!==lang)];let out=[],ok=0,unk=[],i=0;
+function translate(tk,lang){if(lang==='es')return{es:tk.join(' '),conf:1,unk:[],ph:tk.map(w=>({src:w,es:w,g:'src',span:1}))};
+ const order=[lang,...Object.keys(D).filter(x=>x!==lang)];let out=[],ph=[],ok=0,unk=[],i=0;
  while(i<tk.length){let hit=false;for(let n=5;n>0&&!hit;n--){const p=tk.slice(i,i+n).join(' ');if(i+n>tk.length&&n>1&&n>tk.length-i)continue;
-  for(const l of order){if(D[l][p]!==undefined){out.push(D[l][p]);ok+=n;i+=n;hit=true;break}}}
-  if(!hit){const w=tk[i];if(/^\d+$/.test(w)){ok++}else unk.push(w);out.push(w);i++}}
- return{es:out.join(' '),conf:tk.length?ok/tk.length:0,unk}}
+  for(const l of order){const r=D[l][p];if(r!==undefined){out.push(r);ph.push({src:p,es:r,g:l,span:n});ok+=n;i+=n;hit=true;break}}}
+  if(!hit){const w=tk[i];if(/^\d+$/.test(w)){ph.push({src:w,es:w,g:'num',span:1});ok++}else{unk.push(w);ph.push({src:w,es:w,g:'?',span:1})}out.push(w);i++}}
+ return{es:out.join(' '),conf:tk.length?ok/tk.length:0,unk,ph}}
 function rank(tipo,her,x,y,units){const need={choque:her?'Ambulancia':'Patrulla',incendio:'Bomberos',robo:'Patrulla',medico:'Ambulancia'}[tipo];
  if(x==null||!need)return{main:null,alts:[],need};const f=units.filter(u=>!u.busy).map(u=>({...u,km:Math.hypot(u.x-x,u.y-y)*0.06})).sort((a,b)=>a.km-b.km);
  const main=f.find(u=>u.t===need)||null;const alts=['Ambulancia','Patrulla','Bomberos'].map(t=>f.find(u=>u.t===t&&(!main||u.id!==main.id))).filter(Boolean).filter(u=>u.t!==need).slice(0,2);return{main,alts,need}}
-function analyze(text,units,ext){const t0=performance.now(),tk=tok(text),lang=detect(tk);let tr=ext&&ext.es!=null?{es:String(ext.es),conf:ext.conf==null?1:ext.conf,unk:[]}:translate(tk,lang);const es=tr.es;
+function analyze(text,units,ext){const t0=performance.now(),tl=performance.now(),tk=tok(text),lang=detect(tk),lx=Math.round(performance.now()-tl),ts=performance.now(),tr=ext&&ext.es!=null?{es:String(ext.es),conf:ext.conf==null?1:ext.conf,unk:[]}:translate(tk,lang),sx=Math.round(performance.now()-ts),es=tr.es;const t1=performance.now();
  let tipo=/incendio|llamas|humo/.test(es)?'incendio':/robo|arma|disparo|asalto/.test(es)?'robo':/choque|accidente|colisi|volc/.test(es)?'choque':/respir|inconsciente|card[ií]ac|desmay|sangr|ambulancia/.test(es)?'medico':null;
  let her=null,m=es.match(/(\d+|uno|una|un|dos|tres|cuatro|cinco|seis)\s+(?:posibles\s+)?(?:heridos?|personas?|víctimas?)/);
  if(m)her=NUM[m[1]]??+m[1];else if(/\bmi (padre|madre|hijo|hija|esposo|esposa|abuel[oa])\b/.test(es))her=1;
@@ -182,6 +189,7 @@ function analyze(text,units,ext){const t0=performance.now(),tk=tok(text),lang=de
  if(tr.conf<0.6)errs.push('Traducción de baja confianza ('+Math.round(tr.conf*100)+'%)'+(tr.unk.length?': términos no reconocidos «'+tr.unk.slice(0,5).join(', ')+'»':''))}
  const g=uk?GZ[uk]:null,rc=rank(tipo,her,g?g[1]:null,g?g[2]:null,units);
  return{lang,es,conf:tr.conf,tk:tk.length,tipo,her,uk,ub:g?g[0]:null,x:g?g[1]:null,y:g?g[2]:null,cond,veh,prio,errs,rc,ms:Math.round(performance.now()-t0),engine:(ext&&ext.engine)||'local',orig:text,
+ lxms:lx,sxms:sx,sms:Math.round(performance.now()-t1),tks:tk,phs:tr.ph||null,
  sym:{tipo_incidente:tipo,accion_incidente:rc.need?'solicitar '+rc.need.toLowerCase():null,tipo_vehiculo:veh,num_personas:her,condicion_victima:cond,nivel_triage:prio,ubicacion_escena:g?g[0]:null}}}
 const TN={choque:'Choque vehicular',incendio:'Incendio',robo:'Robo / agresión armada',medico:'Emergencia médica'};
 // ---- Interfaz ----
@@ -199,7 +207,14 @@ let cur=null,t0=null,rec=null,voiceOn=false,vtmr=null,vbuf='',vLast=0,vRep=0;
 const MKT={choque:'choque|accidente|colisi',incendio:'incendio|llamas|humo',robo:'robo|arma|disparo',medico:'ambulancia|respirar|heridos|card'};
 const hlw=(t,ws)=>{let o=t;ws.forEach(w=>{if(w&&w.length>2&&!o.includes('<mark>'))o=o.replace(new RegExp('\\b('+w+')\\b','i'),'<mark>$1</mark>')});return o};
 function paint(a,v){$('#tr').innerHTML=v?`<b>${hlw(esc(a.es),[a.uk,MKT[a.tipo]])}</b>`:'Sin entrada.';
- $('#meta').textContent=v?`Idioma detectado: ${a.lang.toUpperCase()} · confianza ${Math.round(a.conf*100)}% · ${a.tk} tokens · ${a.ms} ms · Motor: ${a.engine==='local'?'glosario':a.engine}`:'';
+ $('#meta').textContent=v?`Idioma: ${a.lang.toUpperCase()} · confianza ${Math.round(a.conf*100)}% · ${a.tks.length} tokens · Etapas: léxico ${a.lxms} ms · sintáctico ${a.sxms} ms · semántico ${a.sms} ms (total ${a.ms} ms) · Motor: ${a.engine==='local'?'glosario':a.engine}`:'';
+ $('#lx').innerHTML=v?a.tks.map(t=>`<code class="tkc">${esc(t)}</code>`).join(''):'<span class="mu">Sin entrada.</span>';
+ $('#lxi').textContent=v?`${a.tks.length} tokens · ${a.lxms} ms · son la entrada del sintáctico`:'';
+ const phs=a.phs;
+ $('#sx').innerHTML=phs?phs.map(p=>`<code class="tkc ${p.g==='?'?'un':p.g==='num'||p.g==='src'?'nu':''}" title="regla: glosario ${p.g} · ${p.span} token${p.span>1?'s':''}">${esc(p.src)}<i> → ${esc(p.es)}</i></code>`).join(''):'<span class="mu">'+(v?'Motor externo (servidor): la segmentación local no se aplica':'Sin entrada.')+'</span>';
+ $('#sxi').textContent=phs?`${phs.length} constituyentes · ${a.sxms} ms · sobre esta estructura actúa el semántico`:'';
+ $('#sm').innerHTML=v?Object.entries(a.sym).filter(([,x])=>x!=null).map(([k,x])=>`<code class="tkc sm">${k}=${esc(x)}</code>`).join('')||'<span class="mu">Sin atributos reconocidos</span>':'<span class="mu">Sin entrada.</span>';
+ $('#smi').textContent=v?`${Object.values(a.sym).filter(x=>x!=null).length} atributos vinculados · ${a.sms} ms · alimenta la sugerencia de unidad`:'';
  const cf=$('#cmf');if(cf){cf.style.width=v?Math.max(4,Math.round(a.conf*100))+'%':'0%';cf.style.background=v&&a.conf<.6?'linear-gradient(90deg,#e11d48,#f97316)':''}
  $('#sym').innerHTML='<table>'+Object.entries(a.sym).map(([k,x])=>`<tr><td><code>${k}</code></td><td>${x==null?'<span class="er">⚠ faltante</span>':esc(x)}</td></tr>`).join('')+'</table>';
  $('#errs').innerHTML=a.errs.length?a.errs.map(e=>`<div class="er">⚠ ${esc(e)}</div>`).join(''):(v?'<div class="ok">✔ Sin errores semánticos</div>':'');

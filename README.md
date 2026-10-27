@@ -82,6 +82,7 @@ stateDiagram-v2
 | **Unidades** | Mapa con distritos reales de Tijuana, geocodificación de dirección, tiempo estimado de llegada por unidad, asignación y liberación |
 | **Auditoría** | Doble cadena de hashes encadenados (cliente y servidor) con verificación en un clic |
 | **Calidad y normas** | Diez pruebas automáticas en la aplicación, matriz de requisitos RF/RNF y matriz de alineación normativa ISO/IEEE/CMMI (dinámica; no constituye certificación) |
+| **Diccionario** | Índice navegable de todos los tokens cargados en el sistema: entradas de glosario EN/PT/FR con búsqueda y filtro por idioma, marcadores de detección, gazetteer y numerales |
 
 ---
 
